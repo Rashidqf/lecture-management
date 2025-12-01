@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+  <meta charset="utf-8">
+  <title>Lecture flow</title>
+
+  <!-- mobile responsive meta -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- theme meta -->
+  <meta name="Lecture flow" content="Lecture flow" />
+
+  <!-- ** Plugins Needed for the Project ** -->
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="plugins/bootstrap/bootstrap.min.css">
+  <!-- themefy-icon -->
+  <link rel="stylesheet" href="plugins/themify-icons/themify-icons.css">
+  <!-- slick slider -->
+  <link rel="stylesheet" href="plugins/slick/slick.css">
+  <!-- venobox popup -->
+  <link rel="stylesheet" href="plugins/Venobox/venobox.css">
+  <!-- aos -->
+  <link rel="stylesheet" href="plugins/aos/aos.css">
+
+  <!-- Main Stylesheet -->
+  <link href="css/style.css" rel="stylesheet">
+
+  <!--Favicon-->
+
+  <link rel="icon" type="image/png" sizes="32x32" href="images/icon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/icon.png">
+
+</head>
+
+<body>
+
+  <!-- navigation -->
+  <section class="fixed-top navigation">
+    <div class="container">
+      <nav class="navbar navbar-expand-lg navbar-light" role="navigation">
+        <a class="navbar-brand" href="index.html">
+          <h3> Lecture flow </h3>
+        </a>
+        <div class="ml-auto d-flex">
+          <h4 style="margin-top: 100;color:mediumspringgreen;" id="welcomeMessage">Welcome!</h4>
+          <a href="#" onclick="logout(); return false;" class="btn btn-primary ml-lg-3 primary-shadow">Logout</a>
+        </div>
+    </div>
+    </nav>
+    </div>
+  </section>
+
+  <!-- team -->
+  <section class="section-lg team py-5" id="team" style="margin-top: 80px; margin-bottom: 0; padding-bottom: 0;">
+    <div class="container-fluid">
+      <div class="col-lg-12 text-center">
+        <h1 class="section-title mb-1" style="font-family: 'Times New Roman', Times, serif;">Student Dashboard</h1>
+        <p class="text-muted mb-2">View your features.</p>
+      </div>
+    </div>
+
+    <!-- background image -->
+    <img src="images/backgrounds/team-bg.png" alt="team-bg" class="img-fluid team-bg">
+
+    <!-- background shapes -->
+    <img class="team-bg-shape-1 up-down-animation" src="images/background-shape/seo-ball-1.png" alt="background-shape">
+    <img class="team-bg-shape-2 left-right-animation" src="images/background-shape/seo-ball-1.png"
+      alt="background-shape">
+    <img class="team-bg-shape-3 left-right-animation" src="images/background-shape/team-bg-triangle.png"
+      alt="background-shape">
+    <img class="team-bg-shape-4 up-down-animation img-fluid" src="images/background-shape/team-bg-dots.png"
+      alt="background-shape">
+  </section>
+
+
+  <head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='dashboard_style.css')}}">
+  </head>
+
+  <!-- Dashboard Section -->
+  <div class="container mt-5">
+
+    <!-- First Row: Core Features -->
+    <div class="row g-4 justify-content-center">
+
+      <!-- Live Broadcasting -->
+      <div class="col-md-4">
+        <div class="card dashboard-card text-center shadow-lg border-0 h-100">
+          <div class="card-body p-4">
+            <h5 class="card-title fw-semibold text-primary mb-3">
+              🎙️ Join Live Broadcasts
+            </h5>
+            <p class="card-text text-muted">
+              Participate in real-time lectures, ask questions, and record sessions effortlessly.
+            </p>
+            <a href="live-broadcasting.html" class="btn btn-primary px-4 rounded-pill">
+              Join Broadcast
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audio Recording -->
+      <div class="col-md-4">
+        <div class="card dashboard-card text-center shadow-lg border-0 h-100">
+          <div class="card-body p-4">
+            <h5 class="card-title fw-semibold text-primary mb-3">
+              🎧 My Recordings
+            </h5>
+            <p class="card-text text-muted">
+              Access your recorded lectures, and playback at custom speeds.
+            </p>
+            <a href="audio-recording.html" class="btn btn-primary px-4 rounded-pill">
+              View Recordings
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transcriptions -->
+      <div class="col-md-4">
+        <div class="card dashboard-card text-center shadow-lg border-0 h-100">
+          <div class="card-body p-4">
+            <h5 class="card-title fw-semibold text-primary mb-3">
+              ✍️ Transcriptions
+            </h5>
+            <p class="card-text text-muted">
+              Convert audio to editable text, format it easily, and use text-to-speech when needed.
+            </p>
+            <a href="transcription.html" class="btn btn-primary px-4 rounded-pill">
+              View Transcriptions
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Second Row: Notes & Analytics -->
+    <div class="row g-4 mt-3">
+
+      <!-- Notes -->
+      <div class="col-md-6">
+        <div class="card dashboard-card text-center shadow-lg border-0 h-100">
+          <div class="card-body p-4">
+            <h5 class="card-title fw-semibold text-primary mb-3">
+              📝 My Notes
+            </h5>
+            <p class="card-text text-muted">
+              Generate AI-powered notes from your transcriptions, edit, and highlight key insights.
+            </p>
+            <a href="notes.html" class="btn btn-primary px-4 rounded-pill">
+              View Notes
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analytics -->
+      <div class="col-md-6">
+        <div class="card dashboard-card text-center shadow-lg border-0 h-100">
+          <div class="card-body p-4">
+            <h5 class="card-title fw-semibold text-primary mb-3">
+              📊 Personal Analytics
+            </h5>
+            <p class="card-text text-muted">
+              Track your learning progress, engagement, and receive data-driven recommendations.
+            </p>
+            <button class="btn btn-primary px-4 rounded-pill" onclick="showAnalytics()">
+              View Analytics
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <!-- Hover & Style Enhancements -->
+  <style>
+    .dashboard-card {
+      border-radius: 20px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      background-color: #ffffff;
+    }
+
+    .dashboard-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+      border-top-left-radius: 20px !important;
+      border-top-right-radius: 20px !important;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+  </style>
+
+
+  <!-- Embedded Analytics Section (Hidden by default) -->
+  <div id="analyticsSection" style="display: none;">
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <canvas id="engagementChart"></canvas>
+      </div>
+      <div class="col-md-6">
+        <h5>Insights</h5>
+        <p>Frequently accessed: Live Broadcasts (80%)</p>
+        <p>Areas to focus: Notes Generation</p>
+        <button class="btn btn-info" onclick="provideFeedback()">Provide Feedback</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accessibility and Footer -->
+  <div class="alert alert-info mt-4">
+    <strong>Accessibility:</strong> All features support adjustable playback speeds, text-to-speech, and
+    multi-language options. Your data is stored locally for privacy.
+  </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Socket.IO -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script src="../static/js/api.js"></script>
+  <script src="../static/js/student.js"></script>
+  <script>
+    let studentData = {
+      recordings: [],
+      transcriptions: [],
+      notes: [],
+      activeBroadcasts: []
+    };
+
+    // Initialize dashboard
+    window.onload = async function () {
+      // Check authentication
+      const isAuthenticated = await studentManager.checkAuth();
+      if (!isAuthenticated) return;
+
+      // Load user data
+      const username = sessionStorage.getItem('username');
+      if (username) {
+        document.getElementById('welcomeMessage').textContent = `Welcome, ${username}!`;
+      }
+
+      // Initialize WebSocket
+      api.connectWebSocket();
+
+      // Listen for new broadcasts
+      api.socket.on('new_broadcast', (data) => {
+        loadDashboardData();
+      });
+
+      // Load all dashboard data
+      await loadDashboardData();
+
+      // Poll for active broadcasts every 5 seconds
+      setInterval(async () => {
+        await loadActiveBroadcasts();
+      }, 5000);
+    };
+
+    // Load all dashboard data
+    async function loadDashboardData() {
+      try {
+        // Load recordings
+        const recordingsResponse = await api.getStudentRecordings();
+        if (Array.isArray(recordingsResponse)) {
+          studentData.recordings = recordingsResponse;
+        }
+
+        // Load transcriptions
+        const transcriptionsResponse = await api.getStudentTranscriptions();
+        if (Array.isArray(transcriptionsResponse)) {
+          studentData.transcriptions = transcriptionsResponse;
+        }
+
+        // Load notes
+        const notesResponse = await api.getStudentNotes();
+        if (Array.isArray(notesResponse)) {
+          studentData.notes = notesResponse;
+        }
+
+        // Load active broadcasts
+        await loadActiveBroadcasts();
+
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      }
+    }
+
+    // Load active broadcasts
+    async function loadActiveBroadcasts() {
+      try {
+        const broadcastsResponse = await api.getActiveBroadcasts();
+        if (Array.isArray(broadcastsResponse)) {
+          studentData.activeBroadcasts = broadcastsResponse;
+          
+          // Update broadcast count in UI (if element exists)
+          const broadcastCountEl = document.getElementById('activeBroadcastsCount');
+          if (broadcastCountEl) {
+            broadcastCountEl.textContent = `${broadcastsResponse.length} active broadcast${broadcastsResponse.length !== 1 ? 's' : ''}`;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading active broadcasts:', error);
+      }
+    }
+
+    // Show Analytics
+    function showAnalytics() {
+      document.getElementById('analyticsSection').style.display = 'block';
+      const ctx = document.getElementById('engagementChart').getContext('2d');
+      
+      // Calculate real data
+      const recordingsCount = studentData.recordings.length;
+      const notesCount = studentData.notes.length;
+      const transcriptionsCount = studentData.transcriptions.length;
+      
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Recordings', 'Transcriptions', 'Notes'],
+          datasets: [{
+            label: 'My Content',
+            data: [recordingsCount, transcriptionsCount, notesCount],
+            backgroundColor: ['#007bff', '#28a745', '#ffc107']
+          }]
+        }
+      });
+
+      // Update insights
+      const mostAccessed = recordingsCount > transcriptionsCount && recordingsCount > notesCount ? 'Recordings' :
+                          transcriptionsCount > notesCount ? 'Transcriptions' : 'Notes';
+      document.querySelector('#analyticsSection p').textContent = 
+        `Frequently accessed: ${mostAccessed} (${Math.max(recordingsCount, transcriptionsCount, notesCount)} items)`;
+    }
+
+    // Provide Feedback
+    function provideFeedback() {
+      alert('Feedback feature coming soon!');
+    }
+
+    // Logout
+    async function logout() {
+      try {
+        await api.logout();
+        sessionStorage.clear();
+        window.location.href = 'login .html';
+      } catch (error) {
+        console.error('Logout error:', error);
+        sessionStorage.clear();
+        window.location.href = 'login .html';
+      }
+    }
+  </script>
+
+  <!-- jQuery -->
+  <script src="plugins/jQuery/jquery.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="plugins/bootstrap/bootstrap.min.js"></script>
+  <!-- slick slider -->
+  <script src="plugins/slick/slick.min.js"></script>
+  <!-- venobox -->
+  <script src="plugins/Venobox/venobox.min.js"></script>
+  <!-- aos -->
+  <script src="plugins/aos/aos.js"></script>
+  <!-- Main Script -->
+  <script src="js/script.js"></script>
+
+</body>
+
+</html>

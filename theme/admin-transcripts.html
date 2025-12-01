@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+  <meta charset="utf-8">
+  <title>Manage Transcripts - Admin - Lecture Flow</title>
+
+  <!-- mobile responsive meta -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- ** Plugins Needed for the Project ** -->
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="plugins/bootstrap/bootstrap.min.css">
+  <!-- themefy-icon -->
+  <link rel="stylesheet" href="plugins/themify-icons/themify-icons.css">
+  <!-- Main Stylesheet -->
+  <link href="css/style.css" rel="stylesheet">
+
+  <!--Favicon-->
+  <link rel="icon" type="image/png" sizes="32x32" href="images/icon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/icon.png">
+
+</head>
+
+<body>
+
+  <!-- navigation -->
+  <section class="fixed-top navigation">
+    <div class="">
+      <nav class="navbar navbar-expand-lg navbar-light" role="navigation">
+        <a class="navbar-brand" href="admin-dashboard.html">
+          <h3> Lecture flow </h3>
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-toggle="collapse" data-target="#navbar"
+          aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse text-center" id="navbar">
+          <ul class="navbar-nav mx-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="admin-dashboard.html">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-students.html">Students</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-teachers.html">Teachers</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-podcasts.html">Podcasts</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-transcripts.html">Transcripts</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-audios.html">Audios</a>
+            </li>
+          </ul>
+        </div>
+        <div class="ml-auto d-flex">
+          <a href="admin-dashboard.html" class="btn btn-primary ml-lg-3 primary-shadow">Dashboard</a>
+          <a href="login .html" class="btn btn-primary ml-lg-3 primary-shadow" onclick="logout()">Logout</a>
+        </div>
+    </div>
+    </nav>
+    </div>
+  </section>
+
+  <!-- team -->
+  <section class="section-lg team py-5" id="team" style="margin-top: 80px; margin-bottom: 0; padding-bottom: 0;">
+    <div class="container-fluid">
+      <div class="col-lg-12 text-center">
+        <h1 class="section-title mb-1" style="font-family: 'Times New Roman', Times, serif;">Manage Transcripts</h1>
+        <p class="text-muted mb-2">View and manage all transcriptions.</p>
+      </div>
+    </div>
+
+    <!-- background image -->
+    <img src="images/backgrounds/team-bg.png" alt="team-bg" class="img-fluid team-bg">
+
+    <!-- background shapes -->
+    <img class="team-bg-shape-1 up-down-animation" src="images/background-shape/seo-ball-1.png" alt="background-shape">
+    <img class="team-bg-shape-2 left-right-animation" src="images/background-shape/seo-ball-1.png"
+      alt="background-shape">
+    <img class="team-bg-shape-3 left-right-animation" src="images/background-shape/team-bg-triangle.png"
+      alt="background-shape">
+    <img class="team-bg-shape-4 up-down-animation img-fluid" src="images/background-shape/team-bg-dots.png"
+      alt="background-shape">
+  </section>
+
+  <!-- Transcripts Management Section -->
+  <div class="container mt-5 mb-5">
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <h3>Transcripts List</h3>
+      </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <input type="text" class="form-control" id="searchTranscript" placeholder="Search transcripts...">
+      </div>
+      <div class="col-md-3">
+        <select class="form-control" id="filterStatus">
+          <option value="">All Status</option>
+          <option value="Completed">Completed</option>
+          <option value="Processing">Processing</option>
+          <option value="Failed">Failed</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-secondary w-100" onclick="clearFilters()">Clear Filters</button>
+      </div>
+    </div>
+
+    <!-- Transcripts Table -->
+    <div class="card shadow-lg border-0">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Podcast Title</th>
+                <th>Teacher</th>
+                <th>Date</th>
+                <th>Duration</th>
+                <th>Word Count</th>
+                <th>Language</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="transcriptsTableBody">
+              <!-- Transcripts will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transcript Details Modal -->
+  <div class="modal fade" id="transcriptDetailsModal" tabindex="-1" aria-labelledby="transcriptDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="transcriptDetailsModalLabel">Transcript Details</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="transcriptDetailsBody">
+          <!-- Details will be loaded here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="downloadTranscriptBtn" onclick="downloadTranscript()" style="display: none;">
+            Download Transcript
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Script -->
+  <script src="../static/js/api.js"></script>
+  <!-- jQuery -->
+  <script src="plugins/jQuery/jquery.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="plugins/bootstrap/bootstrap.min.js"></script>
+  <script>
+    let transcripts = [];
+
+    // Load transcripts from API
+    async function loadTranscripts() {
+      try {
+        const transcriptions = await api.getAllTranscriptions();
+        // Transform transcriptions data to match the expected format
+        transcripts = transcriptions.map(transcription => {
+          const user = transcription.user || {};
+          const broadcast = transcription.broadcast || {};
+          const date = new Date(transcription.created_at);
+          
+          // Get word count
+          const wordCount = transcription.word_count || (transcription.text_content ? transcription.text_content.split(/\s+/).length : 0);
+          
+          return {
+            id: transcription.id,
+            podcastTitle: broadcast.lecture_topic || transcription.title || 'Untitled',
+            teacher: user.username || 'Unknown',
+            date: date.toLocaleDateString(),
+            duration: 'N/A', // Not stored in transcriptions table
+            wordCount: wordCount,
+            language: transcription.language || 'English',
+            status: transcription.status === 'completed' ? 'Completed' : 
+                   transcription.status === 'processing' ? 'Processing' : 'Failed',
+            transcriptFile: transcription.file_path || null,
+            textContent: transcription.text_content || ''
+          };
+        });
+        displayTranscripts(transcripts);
+      } catch (error) {
+        console.error('Error loading transcripts:', error);
+        document.getElementById('transcriptsTableBody').innerHTML = 
+          '<tr><td colspan="9" class="text-center text-danger">Error loading transcripts. Please refresh the page.</td></tr>';
+      }
+    }
+    
+    function logout() {
+      sessionStorage.removeItem('isAdmin');
+      sessionStorage.removeItem('adminEmail');
+    }
+
+    // Display transcripts in table
+    function displayTranscripts(transcriptList) {
+      const tbody = document.getElementById('transcriptsTableBody');
+      tbody.innerHTML = '';
+
+      if (!transcriptList || transcriptList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No transcripts found.</td></tr>';
+        return;
+      }
+
+      transcriptList.forEach(transcript => {
+        const row = document.createElement('tr');
+        const statusBadge = transcript.status === 'Completed' ? 'bg-success' : 
+                           transcript.status === 'Processing' ? 'bg-warning' : 'bg-danger';
+        row.innerHTML = `
+          <td>${transcript.id}</td>
+          <td>${transcript.podcastTitle}</td>
+          <td>${transcript.teacher}</td>
+          <td>${transcript.date}</td>
+          <td>${transcript.duration}</td>
+          <td>${transcript.wordCount.toLocaleString()}</td>
+          <td>${transcript.language}</td>
+          <td><span class="badge ${statusBadge}">${transcript.status}</span></td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick="showTranscriptDetails(${transcript.id})">
+              <i class="ti-eye"></i> View Details
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // Show transcript details
+    function showTranscriptDetails(id) {
+      const transcript = transcripts.find(t => t.id === id);
+      if (transcript) {
+        const modalBody = document.getElementById('transcriptDetailsBody');
+        const downloadBtn = document.getElementById('downloadTranscriptBtn');
+        
+        modalBody.innerHTML = `
+          <div class="row">
+            <div class="col-md-12">
+              <h5>${transcript.podcastTitle}</h5>
+              <hr>
+              <p><strong>Teacher:</strong> ${transcript.teacher}</p>
+              <p><strong>Date:</strong> ${transcript.date}</p>
+              <p><strong>Duration:</strong> ${transcript.duration}</p>
+              <p><strong>Word Count:</strong> ${transcript.wordCount.toLocaleString()}</p>
+              <p><strong>Language:</strong> ${transcript.language}</p>
+              <p><strong>Status:</strong> <span class="badge ${transcript.status === 'Completed' ? 'bg-success' : 'bg-warning'}">${transcript.status}</span></p>
+              ${transcript.transcriptFile ? `<p><strong>File:</strong> ${transcript.transcriptFile}</p>` : '<p class="text-muted">Transcript file not available yet.</p>'}
+              ${transcript.textContent ? `
+                <div class="mt-3">
+                  <strong>Transcript Content:</strong>
+                  <div class="border p-3 mt-2" style="max-height: 300px; overflow-y: auto; background-color: #f8f9fa;">
+                    <pre style="white-space: pre-wrap; word-wrap: break-word; margin: 0;">${transcript.textContent}</pre>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+        
+        if (transcript.status === 'Completed' && transcript.textContent) {
+          downloadBtn.style.display = 'block';
+          downloadBtn.onclick = () => downloadTranscript(transcript);
+        } else {
+          downloadBtn.style.display = 'none';
+        }
+        
+        $('#transcriptDetailsModal').modal('show');
+      }
+    }
+
+    // Download transcript
+    function downloadTranscript(transcript) {
+      const content = transcript.textContent || '';
+      const filename = `${transcript.podcastTitle || 'transcript'}_${transcript.id}.txt`;
+      
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Filter transcripts
+    function filterTranscripts() {
+      const searchTerm = document.getElementById('searchTranscript').value.toLowerCase();
+      const statusFilter = document.getElementById('filterStatus').value;
+
+      let filtered = transcripts.filter(transcript => {
+        const matchesSearch = transcript.podcastTitle.toLowerCase().includes(searchTerm) ||
+          transcript.teacher.toLowerCase().includes(searchTerm);
+        const matchesStatus = !statusFilter || transcript.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      });
+
+      displayTranscripts(filtered);
+    }
+
+    // Clear filters
+    function clearFilters() {
+      document.getElementById('searchTranscript').value = '';
+      document.getElementById('filterStatus').value = '';
+      displayTranscripts(transcripts);
+    }
+
+    // Event listeners
+    document.getElementById('searchTranscript').addEventListener('input', filterTranscripts);
+    document.getElementById('filterStatus').addEventListener('change', filterTranscripts);
+
+    // Check admin access
+    window.onload = function() {
+      const isAdmin = sessionStorage.getItem('isAdmin');
+      if (!isAdmin || isAdmin !== 'true') {
+        alert('Access denied. Please login as admin.');
+        window.location.href = 'login .html';
+      } else {
+        loadTranscripts();
+      }
+    };
+  </script>
+
+</body>
+
+</html>
+

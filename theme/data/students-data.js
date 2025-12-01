@@ -1,0 +1,49 @@
+// Students data embedded in JavaScript to avoid CORS issues
+const studentsData = [
+  {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "phone": "+1234567890",
+    "enrollmentDate": "2024-01-15",
+    "status": "Active",
+    "courses": ["Web Development", "Database Systems"]
+  },
+  {
+    "id": 2,
+    "name": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "phone": "+1234567891",
+    "enrollmentDate": "2024-02-20",
+    "status": "Active",
+    "courses": ["Machine Learning", "Data Science"]
+  },
+  {
+    "id": 3,
+    "name": "Bob Johnson",
+    "email": "bob.johnson@example.com",
+    "phone": "+1234567892",
+    "enrollmentDate": "2024-01-10",
+    "status": "Inactive",
+    "courses": ["Web Development"]
+  },
+  {
+    "id": 4,
+    "name": "Alice Williams",
+    "email": "alice.williams@example.com",
+    "phone": "+1234567893",
+    "enrollmentDate": "2024-03-05",
+    "status": "Active",
+    "courses": ["Mobile App Development", "UI/UX Design"]
+  },
+  {
+    "id": 5,
+    "name": "Charlie Brown",
+    "email": "charlie.brown@example.com",
+    "phone": "+1234567894",
+    "enrollmentDate": "2024-02-28",
+    "status": "Active",
+    "courses": ["Cloud Computing", "DevOps"]
+  }
+];
+

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture Flow - Transcription</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f8f9fa; }
+        .transcription-card { margin-bottom: 20px; }
+        .transcription-text { background-color: #e9ecef; padding: 15px; border-radius: 5px; min-height: 200px; }
+        .customize-options { margin-top: 15px; }
+        .progress { height: 10px; }
+        .transcription-item { padding: 10px; border: 1px solid #ddd; margin-bottom: 5px; border-radius: 5px; }
+        .transcription-item:hover { background-color: #e9ecef; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Voice-to-Lecture Transcription - Lecture Flow</h1>
+        
+        <!-- Upload/Select Audio -->
+        <div class="card transcription-card">
+            <div class="card-header">
+                <h5>Select or Upload Audio for Transcription</h5>
+            </div>
+            <div class="card-body">
+                <input type="file" class="form-control" id="audioFile" accept="audio/*">
+                <p class="mt-2 text-muted">Supported formats: WAV, MP3, WEBM, etc.</p>
+                <button class="btn btn-primary mt-3" id="transcribeBtn" onclick="startTranscription()">Start Transcription</button>
+                <div class="progress mt-3" id="transcriptionProgress" style="display: none;">
+                    <div class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Previous Transcriptions -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Previous Transcriptions</h5>
+            </div>
+            <div class="card-body">
+                <div id="transcriptionsList">
+                    <p class="text-muted">Loading transcriptions...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transcription Display -->
+        <div class="card" id="transcriptionCard" style="display: none;">
+            <div class="card-header">
+                <h5>Transcription Result: <span id="lectureTitleDisplay"></span></h5>
+            </div>
+            <div class="card-body">
+                <div class="transcription-text" id="transcriptionText" contenteditable="false">
+                    <!-- Transcription will appear here -->
+                </div>
+                <div class="customize-options">
+                    <button class="btn btn-secondary" onclick="toggleEdit()">Edit Transcription</button>
+                    <button class="btn btn-success ms-2" onclick="saveTranscription()">Save Transcription</button>
+                    <button class="btn btn-info ms-2" onclick="speakTranscription()">Text-to-Speech</button>
+                    <button class="btn btn-warning ms-2" onclick="exportTranscription()">Export as Text</button>
+                    <div class="mt-3">
+                        <label>Font Size:</label>
+                        <select id="fontSizeSelect" class="form-select d-inline-block w-auto ms-2" onchange="changeFontSize()">
+                            <option value="14px">Small</option>
+                            <option value="16px" selected>Medium</option>
+                            <option value="18px">Large</option>
+                        </select>
+                        <label class="ms-3">Theme:</label>
+                        <select id="themeSelect" class="form-select d-inline-block w-auto ms-2" onchange="changeTheme()">
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accuracy Note -->
+        <div class="alert alert-warning mt-4">
+            <strong>Note:</strong> Transcription accuracy depends on audio quality. For best results, use clear speech. AI transcription will be integrated in the future.
+        </div>
+
+        <!-- Accessibility Note -->
+        <div class="alert alert-info mt-2">
+            <strong>Accessibility:</strong> Use Text-to-Speech for auditory learning. Customize formatting for readability.
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../static/js/api.js"></script>
+    <script>
+        let transcriptions = [];
+        let currentTranscription = null;
+        let currentTranscriptionText = '';
+
+        // Check authentication and load transcriptions on page load
+        window.onload = async function() {
+            const userId = sessionStorage.getItem('userId');
+            const userRole = sessionStorage.getItem('userRole');
+            
+            if (!userId || !userRole) {
+                alert('Please login first');
+                window.location.href = 'login .html';
+                return;
+            }
+
+            await loadTranscriptions();
+        };
+
+        // Load transcriptions from API
+        async function loadTranscriptions() {
+            try {
+                const response = await api.getStudentTranscriptions();
+                
+                if (Array.isArray(response)) {
+                    transcriptions = response;
+                    displayTranscriptions(transcriptions);
+                } else {
+                    document.getElementById('transcriptionsList').innerHTML = '<p class="text-muted">No transcriptions found.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading transcriptions:', error);
+                document.getElementById('transcriptionsList').innerHTML = '<p class="text-danger">Error loading transcriptions. Please refresh the page.</p>';
+            }
+        }
+
+        // Display transcriptions
+        function displayTranscriptions(transcriptionsList) {
+            const container = document.getElementById('transcriptionsList');
+            
+            if (!transcriptionsList || transcriptionsList.length === 0) {
+                container.innerHTML = '<p class="text-muted">No transcriptions found. Upload an audio file to create your first transcription!</p>';
+                return;
+            }
+
+            container.innerHTML = transcriptionsList.map(transcription => {
+                const date = new Date(transcription.created_at).toLocaleDateString();
+                const preview = transcription.text_content ? 
+                    transcription.text_content.substring(0, 100) + (transcription.text_content.length > 100 ? '...' : '') : 
+                    'No content';
+                return `
+                    <div class="transcription-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Transcription from ${date}</strong>
+                                <p class="mb-0 text-muted"><small>${preview}</small></p>
+                                <p class="mb-0 text-muted"><small>Word count: ${transcription.word_count || 0}</small></p>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-primary" onclick="viewTranscription(${transcription.id})">View</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // View Transcription
+        async function viewTranscription(transcriptionId) {
+            const transcription = transcriptions.find(t => t.id === transcriptionId);
+            if (!transcription) {
+                alert('Transcription not found');
+                return;
+            }
+
+            currentTranscription = transcription;
+            currentTranscriptionText = transcription.text_content || '';
+            document.getElementById('lectureTitleDisplay').textContent = `Transcription from ${new Date(transcription.created_at).toLocaleDateString()}`;
+            document.getElementById('transcriptionText').textContent = transcription.text_content || 'No content';
+            document.getElementById('transcriptionCard').style.display = 'block';
+        }
+
+        // Start Transcription
+        async function startTranscription() {
+            const fileInput = document.getElementById('audioFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select an audio file first.');
+                return;
+            }
+
+            // Show progress
+            document.getElementById('transcriptionProgress').style.display = 'block';
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                if (progress > 90) progress = 90; // Don't reach 100% until done
+                document.querySelector('#transcriptionProgress .progress-bar').style.width = `${progress}%`;
+            }, 500);
+
+            try {
+                // For now, we'll use a placeholder transcription
+                // In the future, this will call an AI transcription service
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate processing
+                
+                // Simulate transcription result (placeholder until AI is integrated)
+                const simulatedText = `This is a placeholder transcription. In production, this would be generated by an AI transcription service from the uploaded audio file: ${file.name}. 
+                
+The transcription service would process the audio and convert speech to text with high accuracy. Key features would include:
+- Speaker identification
+- Timestamp markers
+- Punctuation and formatting
+- Language detection
+
+Please note: This is a simulated transcription. Real AI transcription will be integrated in the future.`;
+
+                currentTranscriptionText = simulatedText;
+                document.getElementById('transcriptionText').textContent = simulatedText;
+                document.getElementById('lectureTitleDisplay').textContent = file.name;
+                document.getElementById('transcriptionCard').style.display = 'block';
+                
+                clearInterval(interval);
+                document.querySelector('#transcriptionProgress .progress-bar').style.width = '100%';
+                setTimeout(() => {
+                    document.getElementById('transcriptionProgress').style.display = 'none';
+                }, 500);
+            } catch (error) {
+                console.error('Error transcribing:', error);
+                alert('Error transcribing audio: ' + error.message);
+                clearInterval(interval);
+                document.getElementById('transcriptionProgress').style.display = 'none';
+            }
+        }
+
+        // Save Transcription
+        async function saveTranscription() {
+            const textContent = document.getElementById('transcriptionText').textContent.trim();
+            
+            if (!textContent) {
+                alert('No transcription content to save');
+                return;
+            }
+
+            try {
+                const result = await api.createTranscription({
+                    text_content: textContent,
+                    broadcast_id: null,
+                    recording_id: null
+                });
+
+                if (result.success) {
+                    alert('Transcription saved successfully!');
+                    await loadTranscriptions();
+                    document.getElementById('transcriptionCard').style.display = 'none';
+                    document.getElementById('audioFile').value = '';
+                } else {
+                    alert('Failed to save transcription: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error saving transcription:', error);
+                alert('Error saving transcription: ' + error.message);
+            }
+        }
+
+        // Toggle Edit Mode
+        function toggleEdit() {
+            const transcriptionDiv = document.getElementById('transcriptionText');
+            transcriptionDiv.contentEditable = transcriptionDiv.contentEditable === 'true' ? 'false' : 'true';
+            if (transcriptionDiv.contentEditable === 'true') {
+                transcriptionDiv.focus();
+            }
+        }
+
+        // Text-to-Speech
+        function speakTranscription() {
+            const text = document.getElementById('transcriptionText').textContent;
+            if (!text) {
+                alert('No text to speak');
+                return;
+            }
+
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('Text-to-speech is not supported in your browser');
+            }
+        }
+
+        // Export Transcription
+        function exportTranscription() {
+            const text = document.getElementById('transcriptionText').textContent;
+            if (!text) {
+                alert('No transcription to export');
+                return;
+            }
+
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `transcription_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Change Font Size
+        function changeFontSize() {
+            const fontSize = document.getElementById('fontSizeSelect').value;
+            document.getElementById('transcriptionText').style.fontSize = fontSize;
+        }
+
+        // Change Theme
+        function changeTheme() {
+            const theme = document.getElementById('themeSelect').value;
+            const transcriptionDiv = document.getElementById('transcriptionText');
+            if (theme === 'dark') {
+                transcriptionDiv.style.backgroundColor = '#343a40';
+                transcriptionDiv.style.color = '#ffffff';
+            } else {
+                transcriptionDiv.style.backgroundColor = '#e9ecef';
+                transcriptionDiv.style.color = '#000000';
+            }
+        }
+    </script>
+</body>
+</html>

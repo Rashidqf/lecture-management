@@ -1,0 +1,163 @@
+ <!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+  <meta charset="utf-8">
+  <title>Lecture flow</title>
+
+  <!-- mobile responsive meta -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- theme meta -->
+  <meta name="Lecture flow" content="Lecture flow" />
+
+  <!-- ** Plugins Needed for the Project ** -->
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="plugins/bootstrap/bootstrap.min.css">
+  <!-- themefy-icon -->
+  <link rel="stylesheet" href="plugins/themify-icons/themify-icons.css">
+  <!-- slick slider -->
+  <link rel="stylesheet" href="plugins/slick/slick.css">
+  <!-- venobox popup -->
+  <link rel="stylesheet" href="plugins/Venobox/venobox.css">
+  <!-- aos -->
+  <link rel="stylesheet" href="plugins/aos/aos.css">
+
+  <!-- Main Stylesheet -->
+  <link href="css/style.css" rel="stylesheet">
+
+  <!--Favicon-->
+
+  <link rel="icon" type="image/png" sizes="32x32" href="images/icon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/icon.png">
+
+</head>
+
+
+<body>
+
+  <!-- navigation -->
+  <section class="fixed-top navigation">
+    <div class="container">
+      <nav class="navbar navbar-expand-lg navbar-light" role="navigation">
+        <a class="navbar-brand" href="index.html">
+          <h3> Lecture flow </h3>
+        </a>
+       
+        
+          <div class="ml-auto d-flex">
+            <h4 style="margin-top: 100;color:mediumspringgreen;">Well come @abc</h4>
+            <a href="login .html" class="btn btn-primary ml-lg-3 primary-shadow">Logout</a>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </section>
+  <!-- team -->
+  <section class="section-lg team" id="team">
+    <div class="container-fluid">
+      
+        <div class="col-lg-12 text-center">
+          <h2 class="section-title" style="font-family:'Courier New', Courier, monospace;">Cource Traker</h2>
+          
+        </div>
+      </div>
+      
+        
+         <!-- backgound image -->
+    <img src="images/backgrounds/team-bg.png" alt="team-bg" class="img-fluid team-bg">
+    <!-- background shapes -->
+    <img class="team-bg-shape-1 up-down-animation" src="images/background-shape/seo-ball-1.png" alt="background-shape">
+    <img class="team-bg-shape-2 left-right-animation" src="images/background-shape/seo-ball-1.png"
+      alt="background-shape">
+    <img class="team-bg-shape-3 left-right-animation" src="images/background-shape/team-bg-triangle.png"
+      alt="background-shape">
+    <img class="team-bg-shape-4 up-down-animation img-fluid" src="images/background-shape/team-bg-dots.png"
+      alt="background-shape">
+         
+          
+          <!--cources-->
+          
+
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='dashboard_style.css')}}">
+</head>
+
+<body>
+    
+    <main class="container py-5">
+        <div class="row">
+            <div class="col-md">
+                <h2 class="mt-5 text-gradient">All Courses</h2>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">
+                                <h5><strong>Course Name</strong></h5>
+                            </th>
+                            <th scope="col">
+                                <h5><strong>Description</strong></h5>
+                            </th>
+                            <th scope="col">
+                                <h5><strong>Start Date</strong></h5>
+                            </th>
+                            <th scope="col">
+                                <h5><strong>End Date</strong></h5>
+                            </th>
+                            <th scope="col">
+                                <h5><strong>Enroll Status</strong></h5>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                        <tr>
+                            <td><strong>{{ course.name }}</strong></td>
+                            <td style=" word-wrap: break-word;">{{ course.description }}</td>
+                            <td>{{ course.start_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ course.end_date.strftime('%Y-%m-%d') }}</td>
+                            {% if course.id in course_enrolled %}
+                            <td><a style="  width: 100%;" class="btn btn-secondary disabled">Already Enrolled</a></td>
+                            {%else%}
+                            <td><a style="  width: 100%;" class="btn btn-primary"
+                                    href="{{ url_for('enroll_in_course',course_id=course.id) }}">Enroll</a></td>
+                            {%endif%}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if user.roles=='teacher' %}
+        <div>
+            <center>
+                <a class="btn btn-primary" href="{{ url_for('new_course') }}">Add New Course</a>
+            </center>
+        </div>
+      
+    </main>
+  
+
+
+          <!--/cources-->
+
+  
+  
+
+  <!-- jQuery -->
+  <script src="plugins/jQuery/jquery.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="plugins/bootstrap/bootstrap.min.js"></script>
+  <!-- slick slider -->
+  <script src="plugins/slick/slick.min.js"></script>
+  <!-- venobox -->
+  <script src="plugins/Venobox/venobox.min.js"></script>
+  <!-- aos -->
+  <script src="plugins/aos/aos.js"></script>
+  <!-- Main Script -->
+  <script src="js/script.js"></script>
+
+</body>
+
+</html>
