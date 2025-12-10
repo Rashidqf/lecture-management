@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture Flow - Audio Recording</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f8f9fa; }
+        .recording-card { margin-bottom: 20px; }
+        .controls { margin-top: 15px; }
+        .bookmarks-list { max-height: 200px; overflow-y: auto; }
+        .lecture-item { padding: 10px; border: 1px solid #ddd; margin-bottom: 5px; border-radius: 5px; }
+        .lecture-item:hover { background-color: #e9ecef; }
+        .progress { height: 10px; }
+        .btn-group-item { margin: 2px; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Audio Recording - Lecture Flow</h1>
+        
+        <!-- Recording Controls -->
+        <div class="card recording-card">
+            <div class="card-header">
+                <h5>Record a New Lecture</h5>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-success" id="recordBtn" onclick="toggleRecording()">Start Recording</button>
+                <button class="btn btn-danger ms-2" id="stopBtn" onclick="stopRecording()" style="display: none;">Stop Recording</button>
+                <button class="btn btn-primary ms-2" id="saveBtn" onclick="saveRecording()" style="display: none;">Save Recording</button>
+                <div class="mt-3">
+                    <label for="lectureTitle">Lecture Title:</label>
+                    <input type="text" class="form-control" id="lectureTitle" placeholder="Enter lecture title">
+                </div>
+                <div class="progress mt-3" id="recordingProgress" style="display: none;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recorded Lectures Library -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Your Recorded Lectures</h5>
+            </div>
+            <div class="card-body">
+                <div id="lecturesList">
+                    <p class="text-muted">Loading recordings...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Playback and Controls -->
+        <div class="card mt-4" id="playbackCard" style="display: none;">
+            <div class="card-header">
+                <h5 id="currentLectureTitle">Playing: Lecture Title</h5>
+            </div>
+            <div class="card-body">
+                <audio controls id="recordedAudio" class="w-100"></audio>
+                <div class="controls mt-3">
+                    <label>Playback Speed:</label>
+                    <select id="speedSelect" class="form-select d-inline-block w-auto ms-2" onchange="changeSpeed()">
+                        <option value="0.5">0.5x</option>
+                        <option value="1" selected>1x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2">2x</option>
+                    </select>
+                    <!-- <button class="btn btn-warning ms-3" onclick="addBookmark()">Add Bookmark</button> -->
+                    <button class="btn btn-info ms-2" onclick="exportRecording()">Export Recording</button>
+                </div>
+                <!-- <div class="mt-3">
+                    <h6>Bookmarks</h6>
+                    <ul id="bookmarksList" class="bookmarks-list list-group"></ul>
+                </div> -->
+            </div>
+        </div>
+
+        <!-- Accessibility Note -->
+        <div class="alert alert-info mt-4">
+            <strong>Accessibility:</strong> Use playback speed controls for different learning paces. Bookmarks help with quick reference.
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../static/js/api.js"></script>
+    <script>
+        let mediaRecorder, recordedChunks = [], currentLecture = null, bookmarks = [];
+        let currentStream = null;
+        let recordings = [];
+
+        // Check authentication and load recordings on page load
+        window.onload = async function() {
+            const userId = sessionStorage.getItem('userId');
+            const userRole = sessionStorage.getItem('userRole');
+            
+            if (!userId || !userRole) {
+                alert('Please login first');
+                window.location.href = 'login .html';
+                return;
+            }
+
+            await loadRecordings();
+        };
+
+        // Load recordings from API
+        async function loadRecordings() {
+            try {
+                const userRole = sessionStorage.getItem('userRole');
+                let response;
+                
+                if (userRole === 'teacher') {
+                    response = await api.getRecordings();
+                } else {
+                    response = await api.getStudentRecordings();
+                }
+
+                if (Array.isArray(response)) {
+                    recordings = response;
+                    displayRecordings(recordings);
+                } else {
+                    document.getElementById('lecturesList').innerHTML = '<p class="text-muted">No recordings found.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading recordings:', error);
+                document.getElementById('lecturesList').innerHTML = '<p class="text-danger">Error loading recordings. Please refresh the page.</p>';
+            }
+        }
+
+        // Display recordings
+        function displayRecordings(recordingsList) {
+            const container = document.getElementById('lecturesList');
+            console.log(recordingsList);
+            if (!recordingsList || recordingsList.length === 0) {
+                container.innerHTML = '<p class="text-muted">No recordings found. Start recording to create your first lecture!</p>';
+                return;
+            }
+
+            container.innerHTML = recordingsList.map(recording => {
+                const date = new Date(recording.created_at).toLocaleDateString();
+
+                // Normalize file path: handle Windows backslashes and normalize to forward slashes
+                let filePath = recording.file_path || '';
+                // Replace backslashes with forward slashes (Windows compatibility)
+                filePath = filePath.replace(/\\/g, '/');
+                // Remove 'uploads/' prefix if present (keep just the relative path)
+                filePath = filePath.replace(/^uploads\//, '');
+                // Construct proper URL
+                const fileUrl = filePath ? `http://localhost:5000/uploads/${filePath}` : '#';
+                
+                // Escape quotes in title for onclick attribute
+                const safeTitle = (recording.title || 'Recording').replace(/'/g, "\\'");
+                
+                return `
+                    <div class="lecture-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${recording.title || 'Untitled Recording'}</strong>
+                                <p class="mb-0 text-muted"><small>Created: ${date}</small></p>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-primary btn-group-item" onclick="playRecording('${fileUrl}', '${safeTitle}')">Play</button>
+                                <button class="btn btn-sm btn-success btn-group-item" onclick="downloadRecording('${fileUrl}', '${safeTitle}')">Download</button>
+                                <button class="btn btn-sm btn-danger btn-group-item" onclick="deleteRecording(${recording.id})">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle Recording
+        async function toggleRecording() {
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                recordedChunks = [];
+                mediaRecorder = new MediaRecorder(currentStream);
+                
+                mediaRecorder.ondataavailable = e => {
+                    if (e.data.size > 0) {
+                        recordedChunks.push(e.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById('recordedAudio').src = url;
+                    document.getElementById('playbackCard').style.display = 'block';
+                    document.getElementById('currentLectureTitle').textContent = 
+                        `Playing: ${document.getElementById('lectureTitle').value || 'New Recording'}`;
+                    document.getElementById('saveBtn').style.display = 'inline-block';
+                    document.getElementById('recordingProgress').style.display = 'none';
+                };
+                
+                mediaRecorder.start(1000); // Collect data every second
+                document.getElementById('recordBtn').style.display = 'none';
+                document.getElementById('stopBtn').style.display = 'inline-block';
+                document.getElementById('recordingProgress').style.display = 'block';
+                
+                // Simulate progress
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 2;
+                    if (progress > 95) progress = 95; // Don't reach 100% until stopped
+                    document.querySelector('#recordingProgress .progress-bar').style.width = `${progress}%`;
+                }, 500);
+                
+                // Store interval to clear later
+                window.recordingInterval = interval;
+            } catch (err) {
+                alert('Microphone access denied: ' + err.message);
+                console.error(err);
+            }
+        }
+
+        // Stop Recording
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                
+                // Stop all tracks
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                    currentStream = null;
+                }
+                
+                // Clear progress interval
+                if (window.recordingInterval) {
+                    clearInterval(window.recordingInterval);
+                    document.querySelector('#recordingProgress .progress-bar').style.width = '100%';
+                }
+                
+                document.getElementById('recordBtn').style.display = 'inline-block';
+                document.getElementById('stopBtn').style.display = 'none';
+            }
+        }
+
+        // Save Recording
+        async function saveRecording() {
+            if (recordedChunks.length === 0) {
+                alert('No recording to save');
+                return;
+            }
+
+            const title = document.getElementById('lectureTitle').value.trim() || 'Untitled Recording';
+            const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+
+            try {
+                // Show loading
+                const saveBtn = document.getElementById('saveBtn');
+                const originalText = saveBtn.textContent;
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+
+                const result = await api.uploadAudio(blob, title);
+
+                if (result.success) {
+                    alert('Recording saved successfully!');
+                    // Reset UI
+                    document.getElementById('lectureTitle').value = '';
+                    document.getElementById('playbackCard').style.display = 'none';
+                    document.getElementById('saveBtn').style.display = 'none';
+                    recordedChunks = [];
+                    
+                    // Reload recordings list
+                    await loadRecordings();
+                } else {
+                    alert('Failed to save recording: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error saving recording:', error);
+                alert('Error saving recording: ' + error.message);
+            } finally {
+                const saveBtn = document.getElementById('saveBtn');
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+            }
+        }
+
+        // Play Recording
+        function playRecording(fileUrl, title) {
+            document.getElementById('recordedAudio').src = fileUrl;
+            document.getElementById('currentLectureTitle').textContent = `Playing: ${title}`;
+            document.getElementById('playbackCard').style.display = 'block';
+            bookmarks = []; // Reset bookmarks
+            // Only try to clear bookmarks if the element exists (it's commented out in HTML)
+            const bookmarksList = document.getElementById('bookmarksList');
+            if (bookmarksList) {
+                bookmarksList.innerHTML = '';
+            }
+        }
+
+        // Download Recording
+        function downloadRecording(fileUrl, title) {
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.download = `${title}.webm`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Delete Recording
+        async function deleteRecording(recordingId) {
+            if (!confirm('Are you sure you want to delete this recording?')) {
+                return;
+            }
+
+            try {
+                const result = await api.deleteRecording(recordingId);
+                if (result.success) {
+                    alert('Recording deleted successfully');
+                    await loadRecordings();
+                } else {
+                    alert('Failed to delete recording: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error deleting recording:', error);
+                alert('Error deleting recording: ' + error.message);
+            }
+        }
+
+        // Change Playback Speed
+        function changeSpeed() {
+            const audio = document.getElementById('recordedAudio');
+            const speed = parseFloat(document.getElementById('speedSelect').value);
+            audio.playbackRate = speed;
+        }
+
+        // Add Bookmark
+        function addBookmark() {
+            const audio = document.getElementById('recordedAudio');
+            const time = audio.currentTime;
+            const minutes = Math.floor(time / 60);
+            const seconds = Math.floor(time % 60);
+            const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            bookmarks.push({ time: time, label: `Bookmark at ${timeString}` });
+            
+            const bookmarksList = document.getElementById('bookmarksList');
+            const bookmarkItem = document.createElement('li');
+            bookmarkItem.className = 'list-group-item';
+            bookmarkItem.innerHTML = `
+                ${timeString} - <button class="btn btn-sm btn-link" onclick="jumpToBookmark(${time})">Jump</button>
+            `;
+            bookmarksList.appendChild(bookmarkItem);
+        }
+
+        // Jump to Bookmark
+        function jumpToBookmark(time) {
+            const audio = document.getElementById('recordedAudio');
+            audio.currentTime = time;
+        }
+
+        // Export Recording
+        function exportRecording() {
+            const audio = document.getElementById('recordedAudio');
+            if (audio.src) {
+                downloadRecording(audio.src, document.getElementById('currentLectureTitle').textContent.replace('Playing: ', ''));
+            } else {
+                alert('No recording to export');
+            }
+        }
+    </script>
+</body>
+</html>

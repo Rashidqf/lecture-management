@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture Flow - Teacher Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f8f9fa; }
+        .dashboard-card { margin-bottom: 20px; transition: transform 0.2s; }
+        .dashboard-card:hover { transform: scale(1.05); }
+        .navbar { background-color: #28a745; }
+        .progress { height: 10px; }
+        .badge-custom { background-color: #007bff; }
+        .recent-activity { max-height: 200px; overflow-y: auto; }
+        .student-list { max-height: 150px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Lecture Flow - Teacher Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="live-broadcasting.html">Manage Broadcasts</a></li>
+                    <li class="nav-item"><a class="nav-link" href="audio-recording.html">Recordings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="transcription.html">Transcriptions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="notes.html">Notes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Welcome Section -->
+        <div class="row">
+            <div class="col-md-12">
+                <h1 id="welcomeMessage">Welcome to Your Teacher Dashboard</h1>
+                <p>Manage lectures, engage students, and track progress with powerful tools for educators.</p>
+            </div>
+        </div>
+
+        <!-- Feature Cards -->
+        <div class="row mt-4">
+            <!-- Manage Broadcasts Card -->
+            <div class="col-md-4">
+                <div class="card dashboard-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Manage Broadcasts</h5>
+                        <p class="card-text">Host live sessions, record them, and moderate Q&A for student interaction.</p>
+                        <a href="live-broadcasting.html" class="btn btn-success">Host Broadcast</a>
+                        <div class="mt-2">
+                            <small id="upcomingBroadcast">Loading...</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recordings and Content Card -->
+            <div class="col-md-4">
+                <div class="card dashboard-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Recordings & Content</h5>
+                        <p class="card-text">Organize recorded lectures, share with students, and manage library.</p>
+                        <a href="audio-recording.html" class="btn btn-success">View Recordings</a>
+                        <div class="mt-2">
+                            <small id="recordingsCount">Loading...</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transcriptions and Notes Card -->
+            <div class="col-md-4">
+                <div class="card dashboard-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Transcriptions & Notes</h5>
+                        <p class="card-text">Generate accurate transcriptions and create/share structured notes.</p>
+                        <a href="transcription.html" class="btn btn-success">Manage Transcriptions</a>
+                        <div class="mt-2">
+                            <small id="notesCount">Loading...</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <!-- Student Insights Card -->
+            <div class="col-md-6">
+                <div class="card dashboard-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Student Insights</h5>
+                        <p class="card-text">Track student engagement, participation, and progress analytics.</p>
+                        <button class="btn btn-success" onclick="showStudentInsights()">View Insights</button>
+                        <div class="mt-2">
+                            <small id="avgEngagement">Loading...</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Broadcasts Card -->
+            <div class="col-md-6">
+                <div class="card dashboard-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Active Broadcasts</h5>
+                        <p class="card-text">View and manage your currently active live broadcasts.</p>
+                        <a href="live-broadcasting.html" class="btn btn-success">Manage Broadcasts</a>
+                        <div class="mt-2">
+                            <small id="activeBroadcastsCount">Loading...</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity and Student List -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Recent Teaching Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="recent-activity" id="recentActivity">
+                            <p class="text-muted">Loading recent activity...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Top Students</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="student-list" id="studentList">
+                            <p class="text-muted">Loading student data...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Embedded Student Insights Section (Hidden by default) -->
+        <div id="insightsSection" style="display: none;">
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <canvas id="studentEngagementChart"></canvas>
+                </div>
+                <div class="col-md-6">
+                    <h5>Student Analytics</h5>
+                    <p id="mostEngagedTopic">Loading...</p>
+                    <p id="improvementAreas">Loading...</p>
+                    <button class="btn btn-info" onclick="sendFeedback()">Send Feedback to Students</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accessibility and Footer -->
+        <div class="alert alert-info mt-4">
+            <strong>Accessibility:</strong> Tools support multi-language, text-to-speech, and data privacy for student information.
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../static/js/api.js"></script>
+    <script src="../static/js/teacher.js"></script>
+    <script>
+        let teacherData = {
+            recordings: [],
+            broadcasts: [],
+            notes: [],
+            attendance: []
+        };
+
+        // Initialize dashboard
+        window.onload = async function() {
+            // Check authentication using sessionStorage (client-side)
+            const isAuthenticated = await teacherManager.checkAuth();
+            if (!isAuthenticated) return;
+
+            // Load user data from localStorage (preferred) or sessionStorage (fallback)
+            const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+            const username = localStorage.getItem('username') || sessionStorage.getItem('username');
+            const userRole = localStorage.getItem('userRole') || sessionStorage.getItem('userRole');
+            
+            // Verify we have the required data
+            if (!userId || !userRole || userRole !== 'teacher') {
+                alert('Invalid session. Please login again.');
+                window.location.href = 'login .html';
+                return;
+            }
+            
+            if (username) {
+                document.getElementById('welcomeMessage').textContent = `Welcome, ${username}!`;
+            }
+
+            // Try to verify session with backend (non-blocking)
+            // If it fails, we'll still use sessionStorage data
+            try {
+                const sessionCheck = await fetch('http://localhost:5000/api/check-session', {
+                    credentials: 'include'
+                });
+                if (!sessionCheck.ok) {
+                    // Session expired on server, but we have sessionStorage
+                    // Continue with sessionStorage data - the API endpoints will handle it
+                    console.warn('Server session expired, but using sessionStorage data');
+                }
+            } catch (error) {
+                // Network error or CORS issue - continue with sessionStorage
+                console.warn('Could not verify server session, using sessionStorage:', error);
+            }
+
+            // Initialize WebSocket
+            api.connectWebSocket();
+
+            // Listen for new broadcasts
+            api.socket.on('new_broadcast', (data) => {
+                loadDashboardData();
+            });
+
+            // Load all dashboard data
+            await loadDashboardData();
+        };
+
+        // Load all dashboard data
+        async function loadDashboardData() {
+            try {
+                // Load recordings
+                const recordingsResponse = await api.getRecordings();
+                if (Array.isArray(recordingsResponse)) {
+                    teacherData.recordings = recordingsResponse;
+                    const recordingsCount = recordingsResponse.length;
+                    const thisMonth = new Date().getMonth();
+                    const thisYear = new Date().getFullYear();
+                    const thisMonthRecordings = recordingsResponse.filter(r => {
+                        const date = new Date(r.created_at);
+                        return date.getMonth() === thisMonth && date.getFullYear() === thisYear;
+                    }).length;
+                    document.getElementById('recordingsCount').textContent = 
+                        `Total: ${recordingsCount} recordings (${thisMonthRecordings} this month)`;
+                } else {
+                    document.getElementById('recordingsCount').textContent = 'No recordings yet';
+                }
+
+                // Load all broadcasts (active + ended)
+                const broadcastsResponse = await api.getTeacherBroadcasts('all');
+                if (Array.isArray(broadcastsResponse)) {
+                    teacherData.broadcasts = broadcastsResponse;
+                    const userId = parseInt(sessionStorage.getItem('userId'));
+                    const myBroadcasts = broadcastsResponse.filter(b => b.teacher_id === userId);
+                    const myActiveBroadcasts = myBroadcasts.filter(b => b.status === 'active');
+                    const myEndedBroadcasts = myBroadcasts.filter(b => b.status === 'ended');
+                    
+                    document.getElementById('activeBroadcastsCount').textContent = 
+                        `${myActiveBroadcasts.length} active, ${myEndedBroadcasts.length} ended`;
+                    
+                    // Show upcoming broadcast
+                    if (myActiveBroadcasts.length > 0) {
+                        const nextBroadcast = myActiveBroadcasts[0];
+                        document.getElementById('upcomingBroadcast').textContent = 
+                            `Active: "${nextBroadcast.lecture_topic}" - ${nextBroadcast.course_title}`;
+                    } else if (myEndedBroadcasts.length > 0) {
+                        const lastBroadcast = myEndedBroadcasts[0];
+                        document.getElementById('upcomingBroadcast').textContent = 
+                            `Last: "${lastBroadcast.lecture_topic}" - ${lastBroadcast.course_title}`;
+                    } else {
+                        document.getElementById('upcomingBroadcast').textContent = 'No broadcasts yet';
+                    }
+                } else {
+                    document.getElementById('activeBroadcastsCount').textContent = 'No broadcasts';
+                    document.getElementById('upcomingBroadcast').textContent = 'No broadcasts yet';
+                }
+
+                // Load transcriptions
+                try {
+                    const transcriptionsResponse = await api.getTeacherTranscriptions();
+                    if (Array.isArray(transcriptionsResponse)) {
+                        const transcriptionsCount = transcriptionsResponse.length;
+                        const completedCount = transcriptionsResponse.filter(t => t.status === 'completed').length;
+                        document.getElementById('notesCount').textContent = 
+                            `Transcriptions: ${completedCount}/${transcriptionsCount} completed`;
+                    } else if (transcriptionsResponse.success === false) {
+                        // Authentication error
+                        console.warn('Transcriptions: Authentication required');
+                        document.getElementById('notesCount').textContent = 'Transcriptions: Login required';
+                    } else {
+                        document.getElementById('notesCount').textContent = 'Transcriptions: 0';
+                    }
+                } catch (error) {
+                    console.error('Error loading transcriptions:', error);
+                    if (error.message && error.message.includes('Session expired')) {
+                        alert('Your session has expired. Please login again.');
+                        window.location.href = 'login .html';
+                        return;
+                    }
+                    document.getElementById('notesCount').textContent = 'Transcriptions: Error loading';
+                }
+
+                // Load notes
+                try {
+                    const notesResponse = await api.getTeacherNotes();
+                    if (Array.isArray(notesResponse)) {
+                        const notesCount = notesResponse.length;
+                        const notesText = document.getElementById('notesCount').textContent;
+                        document.getElementById('notesCount').textContent = 
+                            `${notesText} | Notes: ${notesCount}`;
+                    } else if (notesResponse.success === false) {
+                        // Authentication error - already handled above
+                        console.warn('Notes: Authentication required');
+                    }
+                } catch (error) {
+                    console.error('Error loading notes:', error);
+                    if (error.message && error.message.includes('Session expired')) {
+                        alert('Your session has expired. Please login again.');
+                        window.location.href = 'login .html';
+                        return;
+                    }
+                }
+
+                // Load recent activity
+                await loadRecentActivity();
+
+                // Load student insights
+                await loadStudentInsights();
+
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showError('Failed to load dashboard data. Please refresh the page.');
+            }
+        }
+
+        // Load recent activity
+        async function loadRecentActivity() {
+            try {
+                const broadcastsResponse = await api.getTeacherBroadcasts('all');
+                const userId = parseInt(sessionStorage.getItem('userId'));
+                const myBroadcasts = Array.isArray(broadcastsResponse) ? 
+                    broadcastsResponse.filter(b => b.teacher_id === userId) : [];
+
+                const activityHtml = [];
+                
+                // Get recent broadcasts (sort by started_at, most recent first)
+                myBroadcasts.sort((a, b) => {
+                    const dateA = new Date(a.started_at);
+                    const dateB = new Date(b.started_at);
+                    return dateB - dateA;
+                }).slice(0, 5).forEach(broadcast => {
+                    const date = new Date(broadcast.started_at).toLocaleDateString();
+                    const status = broadcast.status === 'active' ? '🟢 Active' : '🔴 Ended';
+                    activityHtml.push(`<p><strong>${date}</strong> [${status}]: "${broadcast.lecture_topic}" - ${broadcast.course_title}</p>`);
+                });
+
+                if (activityHtml.length === 0) {
+                    activityHtml.push('<p class="text-muted">No recent activity</p>');
+                }
+
+                document.getElementById('recentActivity').innerHTML = activityHtml.join('');
+            } catch (error) {
+                console.error('Error loading recent activity:', error);
+                document.getElementById('recentActivity').innerHTML = '<p class="text-muted">Error loading activity</p>';
+            }
+        }
+
+        // Load student insights
+        async function loadStudentInsights() {
+            try {
+                // Calculate average engagement (placeholder - would need attendance data)
+                const broadcastsResponse = await api.getTeacherBroadcasts('all');
+                const userId = parseInt(sessionStorage.getItem('userId'));
+                const myBroadcasts = Array.isArray(broadcastsResponse) ? 
+                    broadcastsResponse.filter(b => b.teacher_id === userId) : [];
+
+                // For now, use a placeholder calculation
+                const totalBroadcasts = myBroadcasts.length;
+                const avgEngagement = totalBroadcasts > 0 ? '85%' : '0%';
+                document.getElementById('avgEngagement').textContent = 
+                    `Avg. Engagement: ${avgEngagement} (${totalBroadcasts} total broadcasts)`;
+
+                // Load top students (placeholder - would need attendance/engagement data)
+                if (totalBroadcasts > 0) {
+                    document.getElementById('studentList').innerHTML = 
+                        '<p class="text-muted">Student engagement data will be available after students join broadcasts</p>';
+                } else {
+                    document.getElementById('studentList').innerHTML = 
+                        '<p class="text-muted">Start a broadcast to see student data</p>';
+                }
+            } catch (error) {
+                console.error('Error loading student insights:', error);
+            }
+        }
+
+        // Show Student Insights
+        function showStudentInsights() {
+            document.getElementById('insightsSection').style.display = 'block';
+            const ctx = document.getElementById('studentEngagementChart').getContext('2d');
+            
+            // Create chart with placeholder data (would be replaced with real data)
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['High Engagement', 'Medium Engagement', 'Low Engagement'],
+                    datasets: [{
+                        label: 'Student Distribution',
+                        data: [40, 35, 25],
+                        backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+                    }]
+                }
+            });
+
+            document.getElementById('mostEngagedTopic').textContent = 'Most engaged topic: Check broadcast analytics';
+            document.getElementById('improvementAreas').textContent = 'Areas for improvement: Track attendance and participation';
+        }
+
+        // Send Feedback
+        function sendFeedback() {
+            alert('Feedback feature coming soon!');
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                await api.logout();
+                sessionStorage.clear();
+                window.location.href = 'login .html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                sessionStorage.clear();
+                window.location.href = 'login .html';
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+        }
+    </script>
+</body>
+</html>

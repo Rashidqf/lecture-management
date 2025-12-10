@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+  <meta charset="utf-8">
+  <title>Admin Dashboard - Lecture Flow</title>
+
+  <!-- mobile responsive meta -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- theme meta -->
+  <meta name="Lecture flow" content="Lecture flow" />
+
+  <!-- ** Plugins Needed for the Project ** -->
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="plugins/bootstrap/bootstrap.min.css">
+  <!-- themefy-icon -->
+  <link rel="stylesheet" href="plugins/themify-icons/themify-icons.css">
+  <!-- slick slider -->
+  <link rel="stylesheet" href="plugins/slick/slick.css">
+  <!-- venobox popup -->
+  <link rel="stylesheet" href="plugins/Venobox/venobox.css">
+  <!-- aos -->
+  <link rel="stylesheet" href="plugins/aos/aos.css">
+
+  <!-- Main Stylesheet -->
+  <link href="css/style.css" rel="stylesheet">
+
+  <!--Favicon-->
+  <link rel="icon" type="image/png" sizes="32x32" href="images/icon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/icon.png">
+
+</head>
+
+<body>
+
+  <!-- navigation -->
+  <section class="fixed-top navigation">
+    <div class="">
+      <nav class="navbar navbar-expand-lg navbar-light" role="navigation">
+        <a class="navbar-brand" href="admin-dashboard.html">
+          <h3> Lecture flow </h3>
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-toggle="collapse" data-target="#navbar"
+          aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse text-center" id="navbar">
+          <ul class="navbar-nav mx-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="admin-dashboard.html">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-students.html">Students</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-teachers.html">Teachers</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-podcasts.html">Podcasts</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-transcripts.html">Transcripts</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-audios.html">Audios</a>
+            </li>
+          </ul>
+        </div>
+        <div class="ml-auto d-flex">
+          <h4 style="margin-top: 10px; color: mediumspringgreen; margin-right: 15px;">Admin Dashboard</h4>
+          <a href="login .html" class="btn btn-primary ml-lg-3 primary-shadow" onclick="logout()">Logout</a>
+        </div>
+    </div>
+    </nav>
+    </div>
+  </section>
+
+  <!-- team -->
+  <section class="section-lg team py-5" id="team" style="margin-top: 80px; margin-bottom: 0; padding-bottom: 0;">
+    <div class="container-fluid">
+      <div class="col-lg-12 text-center">
+        <h1 class="section-title mb-1" style="font-family: 'Times New Roman', Times, serif;">Admin Dashboard</h1>
+        <p class="text-muted mb-2">Manage students, teachers, podcasts, transcripts, and audios.</p>
+      </div>
+    </div>
+
+    <!-- background image -->
+    <img src="images/backgrounds/team-bg.png" alt="team-bg" class="img-fluid team-bg">
+
+    <!-- background shapes -->
+    <img class="team-bg-shape-1 up-down-animation" src="images/background-shape/seo-ball-1.png" alt="background-shape">
+    <img class="team-bg-shape-2 left-right-animation" src="images/background-shape/seo-ball-1.png"
+      alt="background-shape">
+    <img class="team-bg-shape-3 left-right-animation" src="images/background-shape/team-bg-triangle.png"
+      alt="background-shape">
+    <img class="team-bg-shape-4 up-down-animation img-fluid" src="images/background-shape/team-bg-dots.png"
+      alt="background-shape">
+  </section>
+
+  <!-- Dashboard Section -->
+  <div class="container mt-5">
+
+    <!-- First Row: Core Management -->
+    <div class="row g-4 justify-content-center">
+
+      <!-- Students Management -->
+      <div class="col-md-4">
+        <div class="card dashboard-card text-center shadow-lg border-0 h-100">
+          <div class="card-body p-4">
+            <h5 class="card-title fw-semibold text-primary mb-3">
+              👥 Students
+            </h5>
+            <p class="card-text text-muted">
+              View, add, edit, and delete student records. Manage enrollments and student status.
+            </p>
+            <a href="admin-students.html" class="btn btn-primary px-4 rounded-pill">
+              Manage Students
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Teachers Management -->
+      <div class="col-md-4">
+        <div class="card dashboard-card text-center shadow-lg border-0 h-100">
+          <div class="card-body p-4">
+            <h5 class="card-title fw-semibold text-primary mb-3">
+              👨‍🏫 Teachers
+            </h5>
+            <p class="card-text text-muted">
+              Manage teacher accounts, assign courses, and view teacher information.
+            </p>
+            <a href="admin-teachers.html" class="btn btn-primary px-4 rounded-pill">
+              Manage Teachers
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Podcasts Management -->
+      <div class="col-md-4">
+        <div class="card dashboard-card text-center shadow-lg border-0 h-100">
+          <div class="card-body p-4">
+            <h5 class="card-title fw-semibold text-primary mb-3">
+              🎙️ Podcasts
+            </h5>
+            <p class="card-text text-muted">
+              View all podcasts with details, filters, and manage podcast content.
+            </p>
+            <a href="admin-podcasts.html" class="btn btn-primary px-4 rounded-pill">
+              Manage Podcasts
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Second Row: Transcripts & Audios -->
+    <div class="row g-4 mt-3">
+
+      <!-- Transcripts -->
+      <div class="col-md-6">
+        <div class="card dashboard-card text-center shadow-lg border-0 h-100">
+          <div class="card-body p-4">
+            <h5 class="card-title fw-semibold text-primary mb-3">
+              ✍️ Transcripts
+            </h5>
+            <p class="card-text text-muted">
+              View and manage all transcriptions. Monitor processing status and download transcripts.
+            </p>
+            <a href="admin-transcripts.html" class="btn btn-primary px-4 rounded-pill">
+              Manage Transcripts
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audios -->
+      <div class="col-md-6">
+        <div class="card dashboard-card text-center shadow-lg border-0 h-100">
+          <div class="card-body p-4">
+            <h5 class="card-title fw-semibold text-primary mb-3">
+              🎧 Audio Files
+            </h5>
+            <p class="card-text text-muted">
+              Manage all audio recordings. View details, download statistics, and file information.
+            </p>
+            <a href="admin-audios.html" class="btn btn-primary px-4 rounded-pill">
+              Manage Audios
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- jQuery -->
+  <script src="plugins/jQuery/jquery.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="plugins/bootstrap/bootstrap.min.js"></script>
+  <!-- Socket.IO -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <!-- API Client -->
+  <script src="../static/js/api.js"></script>
+  <!-- Admin Manager -->
+  <script src="../static/js/admin.js"></script>
+  <script>
+    // Check authentication and load dashboard
+    window.addEventListener('DOMContentLoaded', async function() {
+      if (await adminManager.checkAuth()) {
+        await adminManager.loadDashboardStats();
+      }
+    });
+
+    // Logout function
+    async function logout() {
+      await adminManager.logout();
+    }
+  </script>
+
+</body>
+
+</html>
+

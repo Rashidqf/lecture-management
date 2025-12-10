@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture Flow - Live Broadcasting</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f8f9fa; }
+        .broadcast-card { margin-bottom: 20px; }
+        .chat-box { height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background-color: #ffffff; }
+        .viewer-controls { margin-top: 15px; }
+        .status { font-weight: bold; color: #28a745; }
+        .progress { height: 10px; }
+        .recording-status { color: #dc3545; font-weight: bold; }
+        .broadcast-list-item { cursor: pointer; padding: 15px; border: 1px solid #ddd; margin-bottom: 10px; border-radius: 5px; transition: background-color 0.2s; }
+        .broadcast-list-item:hover { background-color: #e9ecef; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Live Broadcasting - Lecture Flow</h1>
+        
+        <!-- Role Detection (Teacher or Student) -->
+        <div id="teacherView" class="hidden">
+            <!-- Host Controls (for starting broadcast) -->
+            <div class="card broadcast-card">
+                <div class="card-header">
+                    <h5>Host: Start Your Live Lecture</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="lectureTopic">Lecture Topic:</label>
+                        <input type="text" class="form-control" id="lectureTopic" placeholder="Enter topic (e.g., AI in Education)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="courseTitle">Course Title:</label>
+                        <input type="text" class="form-control" id="courseTitle" placeholder="Enter course title">
+                    </div>
+                    <button class="btn btn-success" id="startBroadcastBtn" onclick="startBroadcast()">Start Broadcast</button>
+                    <button class="btn btn-danger ms-2" id="stopBroadcastBtn" onclick="stopBroadcast()" style="display: none;">Stop Broadcast</button>
+                    <div class="mt-3">
+                        <p id="broadcastStatus">Status: Not Broadcasting</p>
+                        <p id="recordingStatus" class="recording-status" style="display: none;">Recording: Active</p>
+                        <p id="broadcastUrl" class="text-muted" style="display: none;"></p>
+                    </div>
+                    <div class="progress mt-3" id="broadcastProgress" style="display: none;">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teacher Chat Section -->
+            <div class="card mt-3" id="teacherChatCard" style="display: none;">
+                <div class="card-header">
+                    <h5>Live Chat</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chat-box" id="chatBox"></div>
+                    <input type="text" class="form-control mt-2" id="chatInput" placeholder="Type a message...">
+                    <button class="btn btn-secondary mt-2" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student View -->
+        <div id="studentView" class="hidden">
+            <!-- Active Broadcasts List -->
+            <div class="card broadcast-card">
+                <div class="card-header">
+                    <h5>Active Live Broadcasts</h5>
+                </div>
+                <div class="card-body">
+                    <div id="activeBroadcastsList">
+                        <p class="text-muted">Loading active broadcasts...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Joined Broadcast View -->
+            <div class="card" id="joinedBroadcastCard" style="display: none;">
+                <div class="card-header">
+                    <h5>Viewer: Join Live Lecture - <span id="currentTopic"></span></h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-success me-2" id="audioStatusBadge">
+                                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                Connecting...
+                            </span>
+                        </div>
+                        <audio controls id="liveAudio" class="w-100" style="display: none;"></audio>
+                    </div>
+                    <div class="viewer-controls">
+                        <button class="btn btn-secondary" onclick="leaveBroadcast()">Leave Broadcast</button>
+                    </div>
+                    <div class="mt-3">
+                        <h6>Interactive Q&A</h6>
+                        <div class="chat-box" id="studentChatBox"></div>
+                        <input type="text" class="form-control mt-2" id="studentChatInput" placeholder="Ask a question...">
+                        <button class="btn btn-secondary mt-2" onclick="sendStudentMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accessibility Note -->
+        <div class="alert alert-info mt-4">
+            <strong>Accessibility:</strong> Audio streaming supports playback controls. Q&A is text-based for inclusivity. Recording saves audio for later review.
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../static/js/api.js"></script>
+    <script src="../static/js/broadcast.js"></script>
+    <script>
+        // const API_BASE_URL = 'http://localhost:5000/api';
+        let currentUser = null;
+        let currentBroadcastId = null;
+        let currentRole = null;
+        let isBroadcasting = false;
+        let localStream = null;
+
+        // Initialize page
+        window.onload = async function() {
+            // Get user from session
+            const userId = sessionStorage.getItem('userId');
+            const userRole = sessionStorage.getItem('userRole');
+            const username = sessionStorage.getItem('username');
+
+            if (!userId || !userRole) {
+                alert('Please login first');
+                window.location.href = 'login .html';
+                return;
+            }
+
+            currentUser = { id: parseInt(userId), role: userRole, username: username };
+            currentRole = userRole;
+
+            // Initialize WebSocket
+            api.connectWebSocket();
+            
+            // Wait for socket to be ready, then setup chat
+            if (api.socket) {
+                if (api.socket.connected) {
+                    initializeChatSystem();
+                } else {
+                    api.socket.on('connect', () => {
+                        console.log('WebSocket connected, initializing chat system');
+                        initializeChatSystem();
+                    });
+                }
+            }
+
+            // Listen for new broadcasts (for students)
+            api.socket.on('new_broadcast', (data) => {
+                console.log('New broadcast started:', data);
+                if (currentRole === 'student') {
+                    loadActiveBroadcasts();
+                }
+            });
+
+            // Listen for broadcast ended
+            api.socket.on('broadcast_ended', (data) => {
+                console.log('Broadcast ended:', data);
+                if (currentRole === 'student') {
+                    loadActiveBroadcasts();
+                    if (currentBroadcastId === data.broadcast_id) {
+                        alert('The broadcast has ended.');
+                        document.getElementById('joinedBroadcastCard').style.display = 'none';
+                        document.getElementById('activeBroadcastsList').parentElement.parentElement.style.display = 'block';
+                        currentBroadcastId = null;
+                    }
+                } else if (currentRole === 'teacher') {
+                    if (currentBroadcastId === data.broadcast_id) {
+                        alert('Broadcast ended successfully.');
+                        resetTeacherView();
+                    }
+                }
+            });
+
+            // Listen for chat messages - will be handled by the handler below
+
+            // Show appropriate view
+            if (currentRole === 'teacher') {
+                document.getElementById('teacherView').classList.remove('hidden');
+            } else if (currentRole === 'student') {
+                document.getElementById('studentView').classList.remove('hidden');
+                loadActiveBroadcasts();
+                // Poll for active broadcasts every 5 seconds
+                setInterval(loadActiveBroadcasts, 5000);
+            } else {
+                alert('Invalid role');
+                window.location.href = 'login .html';
+            }
+        };
+
+        // Teacher: Start Broadcast
+        async function startBroadcast() {
+            const lectureTopic = document.getElementById('lectureTopic').value.trim();
+            const courseTitle = document.getElementById('courseTitle').value.trim();
+
+            if (!lectureTopic || !courseTitle) {
+                alert('Please enter both lecture topic and course title');
+                return;
+            }
+
+            try {
+                // Start broadcast via API (this will get microphone access and start streaming)
+                const result = await broadcastManager.startBroadcast(lectureTopic, courseTitle);
+                
+                // Get the stream from broadcastManager
+                if (result.success && broadcastManager.stream) {
+                    localStream = broadcastManager.stream;
+                }
+                
+                if (result.success) {
+                    currentBroadcastId = result.broadcast.id;
+                    isBroadcasting = true;
+                    
+                    document.getElementById('broadcastStatus').textContent = 'Status: Broadcasting...';
+                    document.getElementById('broadcastStatus').className = 'status';
+                    document.getElementById('startBroadcastBtn').style.display = 'none';
+                    document.getElementById('stopBroadcastBtn').style.display = 'inline-block';
+                    document.getElementById('recordingStatus').style.display = 'block';
+                    document.getElementById('teacherChatCard').style.display = 'block';
+                    
+                    const broadcastUrl = `${window.location.origin}${result.broadcast.broadcast_url}`;
+                    document.getElementById('broadcastUrl').textContent = `Broadcast URL: ${broadcastUrl}`;
+                    document.getElementById('broadcastUrl').style.display = 'block';
+                    
+                    // Join WebSocket room
+                    api.joinBroadcastRoom(currentBroadcastId, () => {
+                        console.log('Teacher joined broadcast room');
+                    });
+
+                    // Setup chat listeners for this broadcast
+                    setupChatListeners();
+
+                    // Setup audio streaming for teacher (to send audio chunks in real-time)
+                    // The broadcastManager already has the stream and broadcast from startBroadcast()
+                    // Just ensure recording starts
+                    if (broadcastManager && broadcastManager.stream && broadcastManager.currentBroadcast) {
+                        if (!broadcastManager.isRecording) {
+                            broadcastManager.startRecording();
+                            console.log('✅ Teacher audio streaming started - students can now hear in real-time!');
+                        }
+                    } else {
+                        console.warn('BroadcastManager not ready for audio streaming');
+                    }
+
+                    // Load chat history
+                    api.socket.emit('get_chat_history', { broadcast_id: currentBroadcastId });
+                    api.socket.once('chat_history', (messages) => {
+                        const chatBox = document.getElementById('chatBox');
+                        if (chatBox) chatBox.innerHTML = ''; // Clear first
+                        messages.forEach(msg => displayChatMessage(msg));
+                    });
+                } else {
+                    alert('Failed to start broadcast: ' + result.message);
+                    if (localStream) {
+                        localStream.getTracks().forEach(track => track.stop());
+                        localStream = null;
+                    }
+                }
+            } catch (err) {
+                alert('Error starting broadcast: ' + err.message);
+                console.error(err);
+            }
+        }
+
+        // Teacher: Stop Broadcast
+        async function stopBroadcast() {
+            if (!currentBroadcastId) return;
+
+            // Save broadcast ID BEFORE calling endBroadcast (it might clear it)
+            const savedBroadcastId = currentBroadcastId;
+
+            try {
+                // endBroadcast() handles audio recording and upload internally
+                const result = await broadcastManager.endBroadcast();
+                
+                if (result.success) {
+                    // Use broadcast_id from result if available, otherwise use saved one
+                    const finalBroadcastId = result.broadcast_id || savedBroadcastId;
+                    
+                    resetTeacherView();
+                    // Show status modal with transcription and notes progress
+                    console.log('Showing status for broadcast:', finalBroadcastId);
+                    showBroadcastCompletionStatus(finalBroadcastId);
+                } else {
+                    alert('Failed to end broadcast: ' + result.message);
+                }
+            } catch (err) {
+                alert('Error stopping broadcast: ' + err.message);
+                console.error(err);
+            }
+        }
+
+        // Show broadcast completion status
+        async function showBroadcastCompletionStatus(broadcastId) {
+            // Create and show modal
+            const modalHtml = `
+                <div class="modal fade" id="broadcastStatusModal" tabindex="-1" aria-labelledby="broadcastStatusModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="broadcastStatusModalLabel">Broadcast Completed</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="alert alert-success">Broadcast ended successfully. Recording saved.</p>
+                                <div id="processingStatus">
+                                    <h6>Processing Status:</h6>
+                                    <div class="mb-3">
+                                        <strong>Transcription:</strong> 
+                                        <span id="transcriptionStatus" class="badge bg-warning">Processing...</span>
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>Notes Generation:</strong> 
+                                        <span id="notesStatus" class="badge bg-warning">Waiting for transcription...</span>
+                                    </div>
+                                    <div class="progress mb-3" style="height: 20px;">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" id="overallProgress">0%</div>
+                                    </div>
+                                </div>
+                                <div id="completedStatus" style="display: none;">
+                                    <h6>Download Options:</h6>
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-primary" onclick="downloadTranscript(${broadcastId})">
+                                            <i class="bi bi-file-text"></i> Download Transcript
+                                        </button>
+                                        <button class="btn btn-success" onclick="downloadNotes(${broadcastId})">
+                                            <i class="bi bi-file-pdf"></i> Download Notes (PDF)
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('broadcastStatusModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const modal = new bootstrap.Modal(document.getElementById('broadcastStatusModal'));
+            modal.show();
+            
+            // Start polling for status
+            pollBroadcastStatus(broadcastId);
+            
+            // Clear currentBroadcastId after modal is shown (so it doesn't interfere)
+            // But only after a delay to ensure modal is fully initialized
+            setTimeout(() => {
+                currentBroadcastId = null;
+            }, 1000);
+        }
+
+        // Poll for broadcast status
+        async function pollBroadcastStatus(broadcastId) {
+            if (!broadcastId || broadcastId === 'null' || broadcastId === null) {
+                console.error('Invalid broadcast ID for status polling:', broadcastId);
+                return;
+            }
+            
+            const maxAttempts = 60; // Poll for up to 5 minutes (60 * 5 seconds)
+            let attempts = 0;
+            
+            const pollInterval = setInterval(async () => {
+                attempts++;
+                
+                try {
+                    const data = await api.getBroadcastStatus(broadcastId);
+                    
+                    if (data.success) {
+                        updateStatusDisplay(data);
+                        
+                        // If both are completed, stop polling
+                        if (data.transcription.status === 'completed' && data.notes.status === 'completed') {
+                            clearInterval(pollInterval);
+                            document.getElementById('completedStatus').style.display = 'block';
+                            document.getElementById('processingStatus').style.display = 'none';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error polling status:', error);
+                    // If we get a 404, the broadcast might not exist - stop polling
+                    if (error.message && error.message.includes('404')) {
+                        clearInterval(pollInterval);
+                    }
+                }
+                
+                // Stop after max attempts
+                if (attempts >= maxAttempts) {
+                    clearInterval(pollInterval);
+                    const statusEl = document.getElementById('transcriptionStatus');
+                    if (statusEl) {
+                        statusEl.textContent = 'Timeout';
+                        statusEl.className = 'badge bg-danger';
+                    }
+                }
+            }, 5000); // Poll every 5 seconds
+        }
+
+        // Update status display
+        function updateStatusDisplay(statusData) {
+            // Update transcription status
+            const transcriptionStatus = document.getElementById('transcriptionStatus');
+            if (statusData.transcription.status === 'completed') {
+                transcriptionStatus.textContent = 'Completed';
+                transcriptionStatus.className = 'badge bg-success';
+            } else if (statusData.transcription.status === 'processing') {
+                transcriptionStatus.textContent = 'Processing...';
+                transcriptionStatus.className = 'badge bg-warning';
+            } else if (statusData.transcription.status === 'failed') {
+                transcriptionStatus.textContent = 'Failed';
+                transcriptionStatus.className = 'badge bg-danger';
+            }
+            
+            // Update notes status
+            const notesStatus = document.getElementById('notesStatus');
+            if (statusData.notes.status === 'completed') {
+                notesStatus.textContent = 'Completed';
+                notesStatus.className = 'badge bg-success';
+            } else if (statusData.transcription.status === 'completed') {
+                notesStatus.textContent = 'Processing...';
+                notesStatus.className = 'badge bg-warning';
+            } else {
+                notesStatus.textContent = 'Waiting for transcription...';
+                notesStatus.className = 'badge bg-secondary';
+            }
+            
+            // Update overall progress
+            let progress = 0;
+            if (statusData.transcription.status === 'completed') progress += 50;
+            if (statusData.notes.status === 'completed') progress += 50;
+            
+            const progressBar = document.getElementById('overallProgress');
+            progressBar.style.width = `${progress}%`;
+            progressBar.textContent = `${progress}%`;
+        }
+
+        // Download transcript
+        async function downloadTranscript(broadcastId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/broadcasts/${broadcastId}/transcript/download`, {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `transcript_${broadcastId}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    alert('Failed to download transcript');
+                }
+            } catch (error) {
+                console.error('Error downloading transcript:', error);
+                alert('Error downloading transcript: ' + error.message);
+            }
+        }
+
+        // Download notes
+        async function downloadNotes(broadcastId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/broadcasts/${broadcastId}/notes/download`, {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `notes_${broadcastId}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    alert('Failed to download notes');
+                }
+            } catch (error) {
+                console.error('Error downloading notes:', error);
+                alert('Error downloading notes: ' + error.message);
+            }
+        }
+
+        function resetTeacherView() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            document.getElementById('broadcastStatus').textContent = 'Status: Not Broadcasting';
+            document.getElementById('broadcastStatus').className = '';
+            document.getElementById('startBroadcastBtn').style.display = 'inline-block';
+            document.getElementById('stopBroadcastBtn').style.display = 'none';
+            document.getElementById('recordingStatus').style.display = 'none';
+            document.getElementById('teacherChatCard').style.display = 'none';
+            document.getElementById('broadcastUrl').style.display = 'none';
+            document.getElementById('chatBox').innerHTML = '';
+            
+            isBroadcasting = false;
+            // Don't clear currentBroadcastId here - it's needed for status check
+            // It will be cleared after status modal is shown
+        }
+
+        // Student: Load Active Broadcasts
+        async function loadActiveBroadcasts() {
+            try {
+                const broadcasts = await api.getActiveBroadcasts();
+                displayBroadcasts(broadcasts);
+            } catch (error) {
+                console.error('Error loading broadcasts:', error);
+                document.getElementById('activeBroadcastsList').innerHTML = 
+                    '<p class="text-danger">Error loading broadcasts. Please refresh the page.</p>';
+            }
+        }
+
+        // Student: Display Broadcasts
+        function displayBroadcasts(broadcasts) {
+            const container = document.getElementById('activeBroadcastsList');
+            
+            if (!broadcasts || broadcasts.length === 0) {
+                container.innerHTML = '<p class="text-muted">No active broadcasts currently.</p>';
+                return;
+            }
+
+            container.innerHTML = broadcasts.map(broadcast => {
+                const teacherName = broadcast.teacher_username || 'Teacher';
+                const broadcastUrl = `${window.location.origin}${broadcast.broadcast_url}`;
+                return `
+                    <div class="broadcast-list-item" onclick="joinBroadcast(${broadcast.id}, '${broadcast.lecture_topic}', '${broadcast.course_title}')">
+                        <h6>${broadcast.lecture_topic}</h6>
+                        <p class="mb-1"><strong>Course:</strong> ${broadcast.course_title}</p>
+                        <p class="mb-1"><strong>Teacher:</strong> ${teacherName}</p>
+                        <p class="mb-1"><strong>URL:</strong> <code>${broadcastUrl}</code></p>
+                        <p class="mb-0 text-muted"><small>Started: ${new Date(broadcast.started_at).toLocaleString()}</small></p>
+                        <button class="btn btn-sm btn-primary mt-2" onclick="event.stopPropagation(); joinBroadcast(${broadcast.id}, '${broadcast.lecture_topic}', '${broadcast.course_title}')">Join Broadcast</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Student: Join Broadcast
+        async function joinBroadcast(broadcastId, lectureTopic, courseTitle) {
+            const username = currentUser.username || prompt('Enter your username:');
+            if (!username) return;
+
+            try {
+                const result = await api.joinBroadcast(broadcastId, username);
+                
+                if (result.success) {
+                    currentBroadcastId = broadcastId;
+                    
+                    // Hide broadcast list, show joined view
+                    document.getElementById('activeBroadcastsList').parentElement.parentElement.style.display = 'none';
+                    document.getElementById('joinedBroadcastCard').style.display = 'block';
+                    document.getElementById('currentTopic').textContent = `${lectureTopic} - ${courseTitle}`;
+                    
+                    // Join WebSocket room
+                    api.joinBroadcastRoom(broadcastId, () => {
+                        console.log('Student joined broadcast room');
+                    });
+
+                    // Setup chat listeners for this broadcast
+                    setupChatListeners();
+
+                    // Setup real-time audio streaming (YouTube-like)
+                    setupAudioStreaming(broadcastId);
+                    
+                    // Show audio controls with play button (for browser autoplay policy)
+                    const audioElement = document.getElementById('liveAudio');
+                    if (audioElement) {
+                        // Create a play button overlay for first interaction
+                        const playOverlay = document.createElement('div');
+                        playOverlay.className = 'text-center mt-2';
+                        playOverlay.innerHTML = `
+                            <button class="btn btn-success btn-lg" id="startAudioBtn">
+                                <i class="bi bi-play-fill"></i> Start Listening to Live Audio
+                            </button>
+                        `;
+                        audioElement.parentElement.insertBefore(playOverlay, audioElement);
+                        
+                        document.getElementById('startAudioBtn').onclick = async () => {
+                            if (audioContext && audioContext.state === 'suspended') {
+                                await audioContext.resume();
+                            }
+                            playOverlay.style.display = 'none';
+                            audioElement.style.display = 'block';
+                            
+                            // Update status
+                            const statusBadge = document.getElementById('audioStatusBadge');
+                            if (statusBadge) {
+                                statusBadge.innerHTML = '🔴 Live';
+                                statusBadge.className = 'badge bg-success me-2';
+                            }
+                            
+                            // Start playing queued audio
+                            if (audioBufferQueue.length > 0) {
+                                playAudioQueue();
+                            }
+                        };
+                    }
+
+                    // Load chat history
+                    api.socket.emit('get_chat_history', { broadcast_id: broadcastId });
+                    api.socket.once('chat_history', (messages) => {
+                        const chatBox = document.getElementById('studentChatBox');
+                        if (chatBox) chatBox.innerHTML = ''; // Clear first
+                        messages.forEach(msg => displayStudentChatMessage(msg));
+                    });
+                } else {
+                    alert('Failed to join broadcast: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error joining broadcast: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        // Student: Leave Broadcast
+        function leaveBroadcast() {
+            if (currentBroadcastId) {
+                api.leaveBroadcastRoom(currentBroadcastId);
+            }
+            
+            // Clear audio stream
+            clearAudioStream();
+            
+            // Remove audio listener
+            if (api.socket) {
+                api.socket.off('audio_chunk');
+            }
+            
+            document.getElementById('joinedBroadcastCard').style.display = 'none';
+            document.getElementById('activeBroadcastsList').parentElement.parentElement.style.display = 'block';
+            document.getElementById('studentChatBox').innerHTML = '';
+            currentBroadcastId = null;
+        }
+
+        // Teacher: Send Message
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message || !currentBroadcastId) return;
+            
+            // Show message immediately (optimistic update)
+            const tempMessage = {
+                id: 'temp_' + Date.now(),
+                broadcast_id: currentBroadcastId,
+                username: currentUser.username,
+                message: message,
+                created_at: new Date().toISOString()
+            };
+            displayChatMessage(tempMessage);
+            
+            // Send to server
+            api.sendChatMessage(currentBroadcastId, currentUser.username, message);
+            input.value = '';
+        }
+
+        // Student: Send Message
+        function sendStudentMessage() {
+            const input = document.getElementById('studentChatInput');
+            const message = input.value.trim();
+            
+            if (!message || !currentBroadcastId) return;
+            
+            // Show message immediately (optimistic update)
+            const tempMessage = {
+                id: 'temp_' + Date.now(),
+                broadcast_id: currentBroadcastId,
+                username: currentUser.username,
+                message: message,
+                created_at: new Date().toISOString()
+            };
+            displayStudentChatMessage(tempMessage);
+            
+            // Send to server
+            api.sendChatMessage(currentBroadcastId, currentUser.username, message);
+            input.value = '';
+        }
+
+        // Display Chat Message (Teacher)
+        function displayChatMessage(message) {
+            const chatBox = document.getElementById('chatBox');
+            if (!chatBox) {
+                console.warn('Chat box not found for teacher');
+                return;
+            }
+
+            // Check if message already exists (avoid duplicates)
+            const messageId = message.id || 'temp_' + message.message + message.username;
+            const existingMsg = chatBox.querySelector(`[data-message-id="${messageId}"]`);
+            if (existingMsg && !messageId.toString().startsWith('temp_')) {
+                // Update existing message (replace temp with real)
+                existingMsg.outerHTML = createMessageHTML(message, messageId);
+                chatBox.scrollTop = chatBox.scrollHeight;
+                return;
+            }
+            
+            if (existingMsg) {
+                return; // Temp message already exists
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'mb-2';
+            messageDiv.setAttribute('data-message-id', messageId);
+            messageDiv.innerHTML = createMessageHTML(message, messageId);
+            
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Display Chat Message (Student)
+        function displayStudentChatMessage(message) {
+            const chatBox = document.getElementById('studentChatBox');
+            if (!chatBox) {
+                console.warn('Chat box not found for student');
+                return;
+            }
+
+            // Check if message already exists (avoid duplicates)
+            const messageId = message.id || 'temp_' + message.message + message.username;
+            const existingMsg = chatBox.querySelector(`[data-message-id="${messageId}"]`);
+            if (existingMsg && !messageId.toString().startsWith('temp_')) {
+                // Update existing message (replace temp with real)
+                existingMsg.outerHTML = createMessageHTML(message, messageId);
+                chatBox.scrollTop = chatBox.scrollHeight;
+                return;
+            }
+            
+            if (existingMsg) {
+                return; // Temp message already exists
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'mb-2';
+            messageDiv.setAttribute('data-message-id', messageId);
+            messageDiv.innerHTML = createMessageHTML(message, messageId);
+            
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Helper function to create message HTML
+        function createMessageHTML(message, messageId) {
+            const time = message.created_at ? new Date(message.created_at).toLocaleTimeString() : new Date().toLocaleTimeString();
+            return `
+                <strong>${message.username}:</strong> ${message.message}
+                <small class="text-muted">${time}</small>
+            `;
+        }
+
+        // Listen for chat messages (both views) - Set up once after socket is connected
+        function setupChatListeners() {
+            if (!api.socket) {
+                console.error('Socket not available for chat listeners');
+                return;
+            }
+            
+            // Remove any existing listeners to avoid duplicates
+            api.socket.off('new_message');
+            
+            // Add new listener
+            api.socket.on('new_message', (data) => {
+                console.log('Received chat message:', data);
+                
+                // Check if message is for current broadcast
+                if (data.broadcast_id && data.broadcast_id !== currentBroadcastId) {
+                    console.log('Message not for current broadcast, ignoring');
+                    return; // Not for this broadcast
+                }
+                
+                // Skip if it's a temporary message we already showed
+                if (data.id && data.id.toString().startsWith('temp_')) {
+                    // This is our optimistic update, server will send the real one
+                    return;
+                }
+                
+                if (currentRole === 'teacher' && currentBroadcastId) {
+                    displayChatMessage(data);
+                } else if (currentRole === 'student' && currentBroadcastId) {
+                    // For students, check broadcast_id matches
+                    if (!data.broadcast_id || data.broadcast_id === currentBroadcastId) {
+                    displayStudentChatMessage(data);
+                    }
+                }
+            });
+            
+            console.log('Chat listeners set up successfully');
+        }
+        
+        // Setup chat listeners - call this after WebSocket is connected
+        function initializeChatSystem() {
+            if (api.socket) {
+                if (api.socket.connected) {
+                    setupChatListeners();
+                } else {
+                    api.socket.on('connect', () => {
+                        console.log('Socket connected, setting up chat listeners');
+                        setupChatListeners();
+                    });
+                }
+            } else {
+                // Wait a bit for socket to initialize
+                setTimeout(() => {
+                    if (api.socket) {
+                        initializeChatSystem();
+                    }
+                }, 500);
+            }
+        }
+
+        // Real-time Audio Streaming Setup using Web Audio API (PCM format)
+        let audioContext = null;
+
+        function setupAudioStreaming(broadcastId) {
+            if (!api.socket) {
+                console.error('WebSocket not connected for audio streaming');
+                return;
+            }
+
+            console.log('Setting up real-time audio streaming for broadcast:', broadcastId);
+            
+            // Clear any existing audio
+            clearAudioStream();
+            
+            // Initialize Web Audio API for real-time playback
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            // Using Web Audio API with PCM format - no MediaSource needed
+            
+            // Remove any existing audio listeners
+            api.socket.off('audio_chunk');
+            
+            // Listen for audio chunks from server
+            api.socket.on('audio_chunk', (data) => {
+                if (data.broadcast_id === broadcastId) {
+                    receiveAudioChunk(data);
+                }
+            });
+
+            // Update status badge
+            const statusBadge = document.getElementById('audioStatusBadge');
+            if (statusBadge) {
+                statusBadge.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Waiting for audio...';
+                statusBadge.className = 'badge bg-warning me-2';
+            }
+            
+            // Initialize audio playback element
+            const audioElement = document.getElementById('liveAudio');
+            if (audioElement) {
+                console.log('Real-time audio streaming ready');
+            } else {
+                console.error('Audio element not found!');
+            }
+        }
+
+        async function receiveAudioChunk(data) {
+            try {
+                // Update status badge to show we're receiving audio
+                const statusBadge = document.getElementById('audioStatusBadge');
+                if (statusBadge && statusBadge.textContent.includes('Waiting')) {
+                    statusBadge.innerHTML = '🔴 Live';
+                    statusBadge.className = 'badge bg-success me-2';
+                }
+                
+                // Initialize Web Audio API if not already done
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                // Resume audio context if suspended
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+                
+                // Decode base64 PCM audio data
+                const binaryString = atob(data.audio_data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                
+                // Convert bytes to Int16Array (PCM format)
+                // Ensure we have an even number of bytes (Int16 needs 2 bytes per sample)
+                const sampleCount = Math.floor(bytes.length / 2);
+                const pcmData = new Int16Array(sampleCount);
+                
+                // Copy bytes to Int16Array (little-endian, which is standard)
+                const pcmBytes = new Uint8Array(pcmData.buffer);
+                for (let i = 0; i < sampleCount * 2; i++) {
+                    pcmBytes[i] = bytes[i];
+                }
+                
+                // Convert PCM to Float32Array for Web Audio API
+                const float32Data = new Float32Array(pcmData.length);
+                for (let i = 0; i < pcmData.length; i++) {
+                    // Convert from Int16 (-32768 to 32767) to Float32 (-1.0 to 1.0)
+                    float32Data[i] = Math.max(-1, Math.min(1, pcmData[i] / 32768.0));
+                }
+                
+                // Get sample rate from data or use default
+                const sampleRate = data.sample_rate || audioContext.sampleRate;
+                
+                // Create audio buffer
+                const audioBuffer = audioContext.createBuffer(
+                    1, // mono channel
+                    float32Data.length,
+                    sampleRate
+                );
+                
+                // Copy data to buffer
+                audioBuffer.getChannelData(0).set(float32Data);
+                
+                // Play the audio buffer immediately
+                playAudioBuffer(audioBuffer);
+                
+            } catch (error) {
+                console.error('Error processing audio chunk:', error);
+                const statusBadge = document.getElementById('audioStatusBadge');
+                if (statusBadge) {
+                    statusBadge.innerHTML = '⚠️ Error';
+                    statusBadge.className = 'badge bg-danger me-2';
+                }
+            }
+        }
+        
+        function playAudioBuffer(audioBuffer) {
+            if (!audioContext) return;
+            
+            try {
+                // Create buffer source
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(audioContext.destination);
+                
+                // Play immediately
+                source.start(0);
+                
+                // Clean up when done
+                source.onended = () => {
+                    source.disconnect();
+                };
+                
+            } catch (error) {
+                console.error('Error playing audio buffer:', error);
+            }
+        }
+        
+        // This function is no longer needed with PCM streaming
+        // Keeping for compatibility but it won't be called
+        
+        function showAudioPlayButton() {
+            const audioElement = document.getElementById('liveAudio');
+            if (!audioElement) return;
+            
+            // Check if button already exists
+            if (document.getElementById('manualPlayBtn')) return;
+            
+            const playBtn = document.createElement('button');
+            playBtn.id = 'manualPlayBtn';
+            playBtn.className = 'btn btn-success btn-sm mt-2';
+            playBtn.textContent = '▶ Play Audio';
+            playBtn.onclick = async () => {
+                playBtn.remove();
+                if (audioChunks.length >= 2) {
+                    playAccumulatedChunks();
+                }
+            };
+            audioElement.parentElement.appendChild(playBtn);
+        }
+        
+        // Using Web Audio API with PCM format - no MediaSource needed
+        
+        // Clear audio when leaving broadcast
+        function clearAudioStream() {
+            // Don't close audioContext, just suspend it
+            if (audioContext && audioContext.state !== 'closed') {
+                audioContext.suspend();
+            }
+            
+            const audioElement = document.getElementById('liveAudio');
+            if (audioElement) {
+                audioElement.src = '';
+                audioElement.load();
+            }
+        }
+    </script>
+</body>
+</html>

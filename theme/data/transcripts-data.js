@@ -1,0 +1,64 @@
+// Transcripts data embedded in JavaScript to avoid CORS issues
+const transcriptsData = [
+  {
+    "id": 1,
+    "podcastId": 1,
+    "podcastTitle": "Introduction to Web Development",
+    "teacher": "Dr. Sarah Johnson",
+    "date": "2024-01-15",
+    "duration": "45:30",
+    "status": "Completed",
+    "wordCount": 8500,
+    "language": "English",
+    "transcriptFile": "transcript-1.txt"
+  },
+  {
+    "id": 2,
+    "podcastId": 2,
+    "podcastTitle": "Machine Learning Basics",
+    "teacher": "Prof. Michael Chen",
+    "date": "2024-01-20",
+    "duration": "60:15",
+    "status": "Completed",
+    "wordCount": 11200,
+    "language": "English",
+    "transcriptFile": "transcript-2.txt"
+  },
+  {
+    "id": 3,
+    "podcastId": 3,
+    "podcastTitle": "UI/UX Design Principles",
+    "teacher": "Dr. Emily Davis",
+    "date": "2024-02-01",
+    "duration": "38:45",
+    "status": "Completed",
+    "wordCount": 7200,
+    "language": "English",
+    "transcriptFile": "transcript-3.txt"
+  },
+  {
+    "id": 4,
+    "podcastId": 4,
+    "podcastTitle": "Cloud Computing with AWS",
+    "teacher": "Prof. Robert Wilson",
+    "date": "2024-02-10",
+    "duration": "52:20",
+    "status": "Processing",
+    "wordCount": 0,
+    "language": "English",
+    "transcriptFile": null
+  },
+  {
+    "id": 5,
+    "podcastId": 5,
+    "podcastTitle": "Mobile App Development",
+    "teacher": "Dr. Lisa Anderson",
+    "date": "2024-02-15",
+    "duration": "55:10",
+    "status": "Completed",
+    "wordCount": 9800,
+    "language": "English",
+    "transcriptFile": "transcript-5.txt"
+  }
+];
+

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+  <meta charset="utf-8">
+  <title>Manage Audios - Admin - Lecture Flow</title>
+
+  <!-- mobile responsive meta -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- ** Plugins Needed for the Project ** -->
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="plugins/bootstrap/bootstrap.min.css">
+  <!-- themefy-icon -->
+  <link rel="stylesheet" href="plugins/themify-icons/themify-icons.css">
+  <!-- Main Stylesheet -->
+  <link href="css/style.css" rel="stylesheet">
+
+  <!--Favicon-->
+  <link rel="icon" type="image/png" sizes="32x32" href="images/icon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/icon.png">
+
+</head>
+
+<body>
+
+  <!-- navigation -->
+  <section class="fixed-top navigation">
+    <div class="">
+      <nav class="navbar navbar-expand-lg navbar-light" role="navigation">
+        <a class="navbar-brand" href="admin-dashboard.html">
+          <h3> Lecture flow </h3>
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-toggle="collapse" data-target="#navbar"
+          aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse text-center" id="navbar">
+          <ul class="navbar-nav mx-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="admin-dashboard.html">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-students.html">Students</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-teachers.html">Teachers</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-podcasts.html">Podcasts</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-transcripts.html">Transcripts</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-audios.html">Audios</a>
+            </li>
+          </ul>
+        </div>
+        <div class="ml-auto d-flex">
+          <a href="admin-dashboard.html" class="btn btn-primary ml-lg-3 primary-shadow">Dashboard</a>
+          <a href="login .html" class="btn btn-primary ml-lg-3 primary-shadow" onclick="logout()">Logout</a>
+        </div>
+    </div>
+    </nav>
+    </div>
+  </section>
+
+  <!-- team -->
+  <section class="section-lg team py-5" id="team" style="margin-top: 80px; margin-bottom: 0; padding-bottom: 0;">
+    <div class="container-fluid">
+      <div class="col-lg-12 text-center">
+        <h1 class="section-title mb-1" style="font-family: 'Times New Roman', Times, serif;">Manage Audio Files</h1>
+        <p class="text-muted mb-2">View and manage all audio recordings.</p>
+      </div>
+    </div>
+
+    <!-- background image -->
+    <img src="images/backgrounds/team-bg.png" alt="team-bg" class="img-fluid team-bg">
+
+    <!-- background shapes -->
+    <img class="team-bg-shape-1 up-down-animation" src="images/background-shape/seo-ball-1.png" alt="background-shape">
+    <img class="team-bg-shape-2 left-right-animation" src="images/background-shape/seo-ball-1.png"
+      alt="background-shape">
+    <img class="team-bg-shape-3 left-right-animation" src="images/background-shape/team-bg-triangle.png"
+      alt="background-shape">
+    <img class="team-bg-shape-4 up-down-animation img-fluid" src="images/background-shape/team-bg-dots.png"
+      alt="background-shape">
+  </section>
+
+  <!-- Audios Management Section -->
+  <div class="container mt-5 mb-5">
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <h3>Audio Files List</h3>
+      </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <input type="text" class="form-control" id="searchAudio" placeholder="Search audio files...">
+      </div>
+      <div class="col-md-3">
+        <select class="form-control" id="filterStatus">
+          <option value="">All Status</option>
+          <option value="Available">Available</option>
+          <option value="Processing">Processing</option>
+          <option value="Unavailable">Unavailable</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-secondary w-100" onclick="clearFilters()">Clear Filters</button>
+      </div>
+    </div>
+
+    <!-- Audios Table -->
+    <div class="card shadow-lg border-0">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Teacher</th>
+                <th>Date</th>
+                <th>Duration</th>
+                <th>File Size</th>
+                <th>Format</th>
+                <th>Downloads</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="audiosTableBody">
+              <!-- Audios will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Details Modal -->
+  <div class="modal fade" id="audioDetailsModal" tabindex="-1" aria-labelledby="audioDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="audioDetailsModalLabel">Audio File Details</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="audioDetailsBody">
+          <!-- Details will be loaded here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="downloadAudioBtn" onclick="downloadAudio()" style="display: none;">
+            Download Audio
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Script -->
+  <script src="../static/js/api.js"></script>
+  <!-- jQuery -->
+  <script src="plugins/jQuery/jquery.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="plugins/bootstrap/bootstrap.min.js"></script>
+  <script>
+    let audios = [];
+
+    // Load audios from API
+    async function loadAudios() {
+      try {
+        const recordings = await api.getAllRecordings();
+        // Transform recordings data to match the expected format
+        audios = recordings.map(recording => {
+          const user = recording.user || {};
+          const date = new Date(recording.created_at);
+          
+          // Format file size
+          const fileSizeBytes = recording.file_size || 0;
+          const fileSizeMB = (fileSizeBytes / (1024 * 1024)).toFixed(2);
+          
+          // Get file extension for format
+          const filePath = recording.file_path || '';
+          const format = filePath.split('.').pop().toUpperCase() || 'WEBM';
+          
+          // Calculate duration (if available, otherwise show "N/A")
+          const duration = recording.duration ? formatDuration(recording.duration) : 'N/A';
+          
+          return {
+            id: recording.id,
+            title: recording.title || 'Untitled Recording',
+            teacher: user.username || 'Unknown',
+            date: date.toLocaleDateString(),
+            duration: duration,
+            fileSize: `${fileSizeMB} MB`,
+            format: format,
+            downloads: 0, // Not tracked in current system
+            status: 'Available',
+            audioFile: recording.file_path || ''
+          };
+        });
+        displayAudios(audios);
+      } catch (error) {
+        console.error('Error loading audios:', error);
+        document.getElementById('audiosTableBody').innerHTML = 
+          '<tr><td colspan="10" class="text-center text-danger">Error loading audio files. Please refresh the page.</td></tr>';
+      }
+    }
+    
+    // Helper function to format duration (seconds to MM:SS or HH:MM:SS)
+    function formatDuration(seconds) {
+      if (!seconds) return 'N/A';
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      
+      if (hours > 0) {
+        return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }
+      return `${minutes}:${String(secs).padStart(2, '0')}`;
+    }
+    
+    function logout() {
+      sessionStorage.removeItem('isAdmin');
+      sessionStorage.removeItem('adminEmail');
+    }
+
+    // Display audios in table
+    function displayAudios(audioList) {
+      const tbody = document.getElementById('audiosTableBody');
+      tbody.innerHTML = '';
+
+      if (!audioList || audioList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No audio files found.</td></tr>';
+        return;
+      }
+
+      audioList.forEach(audio => {
+        const row = document.createElement('tr');
+        const statusBadge = audio.status === 'Available' ? 'bg-success' : 
+                           audio.status === 'Processing' ? 'bg-warning' : 'bg-danger';
+        row.innerHTML = `
+          <td>${audio.id}</td>
+          <td>${audio.title}</td>
+          <td>${audio.teacher}</td>
+          <td>${audio.date}</td>
+          <td>${audio.duration}</td>
+          <td>${audio.fileSize}</td>
+          <td>${audio.format}</td>
+          <td>${audio.downloads.toLocaleString()}</td>
+          <td><span class="badge ${statusBadge}">${audio.status}</span></td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick="showAudioDetails(${audio.id})">
+              <i class="ti-eye"></i> View Details
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // Show audio details
+    function showAudioDetails(id) {
+      const audio = audios.find(a => a.id === id);
+      if (audio) {
+        const modalBody = document.getElementById('audioDetailsBody');
+        const downloadBtn = document.getElementById('downloadAudioBtn');
+        
+        // Normalize file path for URL
+        let fileUrl = '';
+        if (audio.audioFile) {
+          const filePath = audio.audioFile.replace(/\\/g, '/');
+          fileUrl = `http://localhost:5000/uploads/${filePath}`;
+        }
+        
+        modalBody.innerHTML = `
+          <div class="row">
+            <div class="col-md-12">
+              <h5>${audio.title}</h5>
+              <hr>
+              <p><strong>Teacher:</strong> ${audio.teacher}</p>
+              <p><strong>Date:</strong> ${audio.date}</p>
+              <p><strong>Duration:</strong> ${audio.duration}</p>
+              <p><strong>File Size:</strong> ${audio.fileSize}</p>
+              <p><strong>Format:</strong> ${audio.format}</p>
+              <p><strong>Downloads:</strong> ${audio.downloads.toLocaleString()}</p>
+              <p><strong>Status:</strong> <span class="badge ${audio.status === 'Available' ? 'bg-success' : 'bg-warning'}">${audio.status}</span></p>
+              <p><strong>File:</strong> ${audio.audioFile}</p>
+              ${fileUrl ? `<audio controls class="w-100 mt-3"><source src="${fileUrl}" type="audio/webm"></audio>` : ''}
+            </div>
+          </div>
+        `;
+        
+        if (audio.status === 'Available' && fileUrl) {
+          downloadBtn.style.display = 'block';
+          downloadBtn.onclick = () => downloadAudio(fileUrl, audio.title);
+        } else {
+          downloadBtn.style.display = 'none';
+        }
+        
+        $('#audioDetailsModal').modal('show');
+      }
+    }
+
+    // Download audio
+    function downloadAudio(fileUrl, title) {
+      const a = document.createElement('a');
+      a.href = fileUrl;
+      a.download = `${title || 'audio'}.webm`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    // Filter audios
+    function filterAudios() {
+      const searchTerm = document.getElementById('searchAudio').value.toLowerCase();
+      const statusFilter = document.getElementById('filterStatus').value;
+
+      let filtered = audios.filter(audio => {
+        const matchesSearch = audio.title.toLowerCase().includes(searchTerm) ||
+          audio.teacher.toLowerCase().includes(searchTerm);
+        const matchesStatus = !statusFilter || audio.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      });
+
+      displayAudios(filtered);
+    }
+
+    // Clear filters
+    function clearFilters() {
+      document.getElementById('searchAudio').value = '';
+      document.getElementById('filterStatus').value = '';
+      displayAudios(audios);
+    }
+
+    // Event listeners
+    document.getElementById('searchAudio').addEventListener('input', filterAudios);
+    document.getElementById('filterStatus').addEventListener('change', filterAudios);
+
+    // Check admin access
+    window.onload = function() {
+      const isAdmin = sessionStorage.getItem('isAdmin');
+      if (!isAdmin || isAdmin !== 'true') {
+        alert('Access denied. Please login as admin.');
+        window.location.href = 'login .html';
+      } else {
+        loadAudios();
+      }
+    };
+  </script>
+
+</body>
+
+</html>
+

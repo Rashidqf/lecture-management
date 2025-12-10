@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Lecture Flow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="css/style.css" rel="stylesheet">
+
+      <!--Favicon-->
+
+  <link rel="icon" type="image/png" sizes="32x32" href="images/icon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/icon.png">
+</head>
+
+<body class="bg-light d-flex align-items-center justify-content-center vh-100">
+    <!-- backgound image -->
+    <img src="images/backgrounds/team-bg.png" alt="team-bg" class="img-fluid team-bg">
+    <!-- background shapes -->
+    <img class="team-bg-shape-1 up-down-animation" src="images/background-shape/seo-ball-1.png" alt="background-shape">
+    <img class="team-bg-shape-2 left-right-animation" src="images/background-shape/seo-ball-1.png"
+        alt="background-shape">
+    <img class="team-bg-shape-3 left-right-animation" src="images/background-shape/team-bg-triangle.png"
+        alt="background-shape">
+    <img class="team-bg-shape-4 up-down-animation img-fluid" src="images/background-shape/team-bg-dots.png"
+        alt="background-shape">
+    <div class="card p-4 shadow" style="width: 100%; max-width: 400px;">
+        <h3 class="text-center text-primary mb-4 login-heading">Login to Lecture Flow</h3>
+        <form id="loginForm">
+            <div class="mb-2">
+                <label class="form-label">Email address</label>
+                <input type="email" class="form-control" id="email" placeholder="Enter email" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" placeholder="Enter password" required>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="rememberMe" />
+                    <label class="form-check-label" for="rememberMe">Remember me</label>
+                </div>
+                <a href="#" class="small">Forgot password?</a>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Login</button>
+            <p class="text-center mt-3 small">Don't have an account? <a href="signup.html">Sign up</a></p>
+        </form>
+    </div>
+
+    <!-- Bootstrap Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <!-- API Client -->
+    <script src="../static/js/api.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const result = await api.login(email, password);
+                
+                if (result.success) {
+                    // Store user data in localStorage (persists across sessions)
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    localStorage.setItem('userId', result.user.id);
+                    localStorage.setItem('userRole', result.user.role);
+                    localStorage.setItem('username', result.user.username);
+                    localStorage.setItem('userEmail', result.user.email);
+                    
+                    // Also store in sessionStorage for backward compatibility
+                    sessionStorage.setItem('user', JSON.stringify(result.user));
+                    sessionStorage.setItem('userId', result.user.id);
+                    sessionStorage.setItem('userRole', result.user.role);
+                    sessionStorage.setItem('username', result.user.username);
+                    
+                    // Redirect based on role
+                    if (result.user.role === 'admin') {
+                        localStorage.setItem('isAdmin', 'true');
+                        sessionStorage.setItem('isAdmin', 'true');
+                        window.location.href = 'admin-dashboard.html';
+                    } else if (result.user.role === 'teacher') {
+                        localStorage.setItem('isTeacher', 'true');
+                        sessionStorage.setItem('isTeacher', 'true');
+                        window.location.href = 'dashboard-teacher.html';
+                    } else if (result.user.role === 'student') {
+                        localStorage.setItem('isStudent', 'true');
+                        sessionStorage.setItem('isStudent', 'true');
+                        window.location.href = 'dashboard(s).html';
+                    }
+                } else {
+                    alert(result.message || 'Invalid credentials. Please try again.');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    </script>
+</body>
+
+</html>

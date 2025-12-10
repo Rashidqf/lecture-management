@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+  <meta charset="utf-8">
+  <title>Manage Podcasts - Admin - Lecture Flow</title>
+
+  <!-- mobile responsive meta -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- ** Plugins Needed for the Project ** -->
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="plugins/bootstrap/bootstrap.min.css">
+  <!-- themefy-icon -->
+  <link rel="stylesheet" href="plugins/themify-icons/themify-icons.css">
+  <!-- Main Stylesheet -->
+  <link href="css/style.css" rel="stylesheet">
+
+  <!--Favicon-->
+  <link rel="icon" type="image/png" sizes="32x32" href="images/icon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/icon.png">
+
+</head>
+
+<body>
+
+  <!-- navigation -->
+  <section class="fixed-top navigation">
+    <div class="">
+      <nav class="navbar navbar-expand-lg navbar-light" role="navigation">
+        <a class="navbar-brand" href="admin-dashboard.html">
+          <h3> Lecture flow </h3>
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-toggle="collapse" data-target="#navbar"
+          aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse text-center" id="navbar">
+          <ul class="navbar-nav mx-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="admin-dashboard.html">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-students.html">Students</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-teachers.html">Teachers</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-podcasts.html">Podcasts</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-transcripts.html">Transcripts</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="admin-audios.html">Audios</a>
+            </li>
+          </ul>
+        </div>
+        <div class="ml-auto d-flex">
+          <a href="admin-dashboard.html" class="btn btn-primary ml-lg-3 primary-shadow">Dashboard</a>
+          <a href="login .html" class="btn btn-primary ml-lg-3 primary-shadow" onclick="logout()">Logout</a>
+        </div>
+    </div>
+    </nav>
+    </div>
+  </section>
+
+  <!-- team -->
+  <section class="section-lg team py-5" id="team" style="margin-top: 80px; margin-bottom: 0; padding-bottom: 0;">
+    <div class="container-fluid">
+      <div class="col-lg-12 text-center">
+        <h1 class="section-title mb-1" style="font-family: 'Times New Roman', Times, serif;">Manage Podcasts</h1>
+        <p class="text-muted mb-2">View all podcasts with details and filters.</p>
+      </div>
+    </div>
+
+    <!-- background image -->
+    <img src="images/backgrounds/team-bg.png" alt="team-bg" class="img-fluid team-bg">
+
+    <!-- background shapes -->
+    <img class="team-bg-shape-1 up-down-animation" src="images/background-shape/seo-ball-1.png" alt="background-shape">
+    <img class="team-bg-shape-2 left-right-animation" src="images/background-shape/seo-ball-1.png"
+      alt="background-shape">
+    <img class="team-bg-shape-3 left-right-animation" src="images/background-shape/team-bg-triangle.png"
+      alt="background-shape">
+    <img class="team-bg-shape-4 up-down-animation img-fluid" src="images/background-shape/team-bg-dots.png"
+      alt="background-shape">
+  </section>
+
+  <!-- Podcasts Management Section -->
+  <div class="container mt-5 mb-5">
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <h3>Podcasts List</h3>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow-lg border-0 mb-4">
+      <div class="card-body">
+        <h5 class="mb-3">Filters</h5>
+        <div class="row">
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Search</label>
+            <input type="text" class="form-control" id="searchPodcast" placeholder="Search by title or teacher...">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Category</label>
+            <select class="form-control" id="filterCategory">
+              <option value="">All Categories</option>
+              <option value="Web Development">Web Development</option>
+              <option value="Data Science">Data Science</option>
+              <option value="Design">Design</option>
+              <option value="Cloud Computing">Cloud Computing</option>
+              <option value="Mobile Development">Mobile Development</option>
+            </select>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Status</label>
+            <select class="form-control" id="filterStatus">
+              <option value="">All Status</option>
+              <option value="Published">Active/Published</option>
+              <option value="Ended">Ended</option>
+            </select>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Teacher</label>
+            <select class="form-control" id="filterTeacher">
+              <option value="">All Teachers</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <button class="btn btn-secondary" onclick="clearFilters()">Clear All Filters</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Podcasts Grid -->
+    <div class="row" id="podcastsGrid">
+      <!-- Podcasts will be loaded here -->
+    </div>
+  </div>
+
+  <!-- Podcast Details Modal -->
+  <div class="modal fade" id="podcastDetailsModal" tabindex="-1" aria-labelledby="podcastDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="podcastDetailsModalLabel">Podcast Details</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="podcastDetailsBody">
+          <!-- Details will be loaded here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Script -->
+  <script src="../static/js/api.js"></script>
+  <!-- jQuery -->
+  <script src="plugins/jQuery/jquery.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="plugins/bootstrap/bootstrap.min.js"></script>
+  <script>
+    let podcasts = [];
+    let teachers = [];
+
+    // Load podcasts (broadcasts) and teachers from API
+    async function loadData() {
+      try {
+        // Load broadcasts (podcasts) and teachers
+        const [broadcasts, teachersList] = await Promise.all([
+          api.getAllBroadcasts(),
+          api.getTeachers()
+        ]);
+        
+        // Store teachers for filter
+        teachers = teachersList;
+        
+        // Transform broadcasts to podcasts format
+        podcasts = broadcasts.map(broadcast => {
+          const startDate = new Date(broadcast.started_at);
+          const endDate = broadcast.ended_at ? new Date(broadcast.ended_at) : null;
+          
+          // Calculate duration if broadcast has ended
+          let duration = 'N/A';
+          if (endDate && startDate) {
+            const durationSeconds = Math.floor((endDate - startDate) / 1000);
+            const hours = Math.floor(durationSeconds / 3600);
+            const minutes = Math.floor((durationSeconds % 3600) / 60);
+            duration = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+          }
+          
+          return {
+            id: broadcast.id,
+            title: broadcast.lecture_topic || 'Untitled Lecture',
+            teacher: broadcast.teacher_username || 'Unknown',
+            description: `Course: ${broadcast.course_title || 'N/A'}`,
+            category: broadcast.course_title || 'General',
+            status: broadcast.status === 'active' ? 'Published' : 'Ended',
+            date: startDate.toLocaleDateString(),
+            duration: duration,
+            views: 0, // Not tracked yet
+            likes: 0, // Not tracked yet
+            audioFile: broadcast.audio_file_path || null,
+            broadcastUrl: broadcast.broadcast_url || null
+          };
+        });
+        
+        populateTeacherFilter();
+        displayPodcasts(podcasts);
+      } catch (error) {
+        console.error('Error loading podcasts:', error);
+        document.getElementById('podcastsGrid').innerHTML = 
+          '<div class="col-12"><div class="alert alert-danger">Error loading podcasts. Please refresh the page.</div></div>';
+      }
+    }
+    
+    function logout() {
+      sessionStorage.removeItem('isAdmin');
+      sessionStorage.removeItem('adminEmail');
+    }
+
+    // Populate teacher filter
+    function populateTeacherFilter() {
+      const teacherFilter = document.getElementById('filterTeacher');
+      // Clear existing options except "All Teachers"
+      teacherFilter.innerHTML = '<option value="">All Teachers</option>';
+      
+      // Get unique teachers from podcasts
+      const uniqueTeachers = [...new Set(podcasts.map(p => p.teacher))];
+      uniqueTeachers.forEach(teacher => {
+        const option = document.createElement('option');
+        option.value = teacher;
+        option.textContent = teacher;
+        teacherFilter.appendChild(option);
+      });
+    }
+
+    // Display podcasts in grid
+    function displayPodcasts(podcastList) {
+      const grid = document.getElementById('podcastsGrid');
+      grid.innerHTML = '';
+
+      if (podcastList.length === 0) {
+        grid.innerHTML = '<div class="col-12"><div class="alert alert-info">No podcasts found matching the filters.</div></div>';
+        return;
+      }
+
+      podcastList.forEach(podcast => {
+        const col = document.createElement('div');
+        col.className = 'col-md-6 col-lg-4 mb-4';
+        col.innerHTML = `
+          <div class="card dashboard-card shadow-lg border-0 h-100">
+            <div class="card-body">
+              <h5 class="card-title">${podcast.title}</h5>
+              <p class="card-text text-muted"><small>By: ${podcast.teacher}</small></p>
+              <p class="card-text">${podcast.description ? (podcast.description.length > 100 ? podcast.description.substring(0, 100) + '...' : podcast.description) : 'No description available.'}</p>
+              <div class="mb-2">
+                <span class="badge bg-primary">${podcast.category}</span>
+                <span class="badge ${podcast.status === 'Published' ? 'bg-success' : 'bg-warning'}">${podcast.status}</span>
+              </div>
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="ti-calendar"></i> ${podcast.date} | 
+                  <i class="ti-time"></i> ${podcast.duration}
+                </small>
+              </div>
+              <button class="btn btn-primary btn-sm w-100" onclick="showPodcastDetails(${podcast.id})">
+                View Details
+              </button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(col);
+      });
+    }
+
+    // Show podcast details
+    function showPodcastDetails(id) {
+      const podcast = podcasts.find(p => p.id === id);
+      if (podcast) {
+        const modalBody = document.getElementById('podcastDetailsBody');
+        modalBody.innerHTML = `
+          <div class="row">
+            <div class="col-md-12">
+              <h4>${podcast.title}</h4>
+              <hr>
+              <p><strong>Teacher:</strong> ${podcast.teacher}</p>
+              <p><strong>Description:</strong> ${podcast.description}</p>
+              <p><strong>Category:</strong> <span class="badge bg-primary">${podcast.category}</span></p>
+              <p><strong>Status:</strong> <span class="badge ${podcast.status === 'Published' ? 'bg-success' : 'bg-warning'}">${podcast.status}</span></p>
+              <p><strong>Date:</strong> ${podcast.date}</p>
+              <p><strong>Duration:</strong> ${podcast.duration}</p>
+              ${podcast.broadcastUrl ? `<p><strong>Broadcast URL:</strong> <code>${podcast.broadcastUrl}</code></p>` : ''}
+              ${podcast.audioFile ? `<p><strong>Audio File:</strong> ${podcast.audioFile}</p>` : '<p class="text-muted">No audio file available.</p>'}
+              ${podcast.audioFile ? `<audio controls class="w-100 mt-2"><source src="http://localhost:5000/uploads/${podcast.audioFile.replace(/\\/g, '/')}" type="audio/webm"></audio>` : ''}
+            </div>
+          </div>
+        `;
+        $('#podcastDetailsModal').modal('show');
+      }
+    }
+
+    // Filter podcasts
+    function filterPodcasts() {
+      const searchTerm = document.getElementById('searchPodcast').value.toLowerCase();
+      const categoryFilter = document.getElementById('filterCategory').value;
+      const statusFilter = document.getElementById('filterStatus').value;
+      const teacherFilter = document.getElementById('filterTeacher').value;
+
+      let filtered = podcasts.filter(podcast => {
+        const matchesSearch = podcast.title.toLowerCase().includes(searchTerm) ||
+          podcast.teacher.toLowerCase().includes(searchTerm) ||
+          (podcast.description && podcast.description.toLowerCase().includes(searchTerm));
+        const matchesCategory = !categoryFilter || podcast.category === categoryFilter;
+        const matchesStatus = !statusFilter || podcast.status === statusFilter;
+        const matchesTeacher = !teacherFilter || podcast.teacher === teacherFilter;
+        return matchesSearch && matchesCategory && matchesStatus && matchesTeacher;
+      });
+
+      displayPodcasts(filtered);
+    }
+
+    // Clear filters
+    function clearFilters() {
+      document.getElementById('searchPodcast').value = '';
+      document.getElementById('filterCategory').value = '';
+      document.getElementById('filterStatus').value = '';
+      document.getElementById('filterTeacher').value = '';
+      displayPodcasts(podcasts);
+    }
+
+    // Event listeners for filters
+    document.getElementById('searchPodcast').addEventListener('input', filterPodcasts);
+    document.getElementById('filterCategory').addEventListener('change', filterPodcasts);
+    document.getElementById('filterStatus').addEventListener('change', filterPodcasts);
+    document.getElementById('filterTeacher').addEventListener('change', filterPodcasts);
+
+    // Check admin access
+    window.onload = function() {
+      const isAdmin = sessionStorage.getItem('isAdmin');
+      if (!isAdmin || isAdmin !== 'true') {
+        alert('Access denied. Please login as admin.');
+        window.location.href = 'login .html';
+      } else {
+        loadData();
+      }
+    };
+  </script>
+
+</body>
+
+</html>
+
