@@ -180,7 +180,7 @@
       try {
         const recordings = await api.getAllRecordings();
         // Transform recordings data to match the expected format
-        audios = recordings.map(recording => {
+        audios = recordings.data.map(recording => {
           const user = recording.user || {};
           const date = new Date(recording.created_at);
           
