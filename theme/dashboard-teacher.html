@@ -10,18 +10,14 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Socket.IO -->
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <!-- Dashboard Styles -->
+    <link rel="stylesheet" type="text/css" href="../static/dashboard_style.css">
+    <link rel="stylesheet" href="./css/style.css">
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f8f9fa; }
-        .dashboard-card { margin-bottom: 20px; transition: transform 0.2s; }
-        .dashboard-card:hover { transform: scale(1.05); }
-        .navbar { background-color: #28a745; }
-        .progress { height: 10px; }
-        .badge-custom { background-color: #007bff; }
-        .recent-activity { max-height: 200px; overflow-y: auto; }
-        .student-list { max-height: 150px; overflow-y: auto; }
+        /* Remove inline styles to use dashboard_style.css */
     </style>
 </head>
-<body>
+<body class="teacher-dashboard">
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
@@ -59,7 +55,7 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">Manage Broadcasts</h5>
                         <p class="card-text">Host live sessions, record them, and moderate Q&A for student interaction.</p>
-                        <a href="live-broadcasting.html" class="btn btn-success">Host Broadcast</a>
+                        <a href="live-broadcasting.html" class="btn btn-success btn btn-primary ml-lg-3 primary-shadow">Host Broadcast</a>
                         <div class="mt-2">
                             <small id="upcomingBroadcast">Loading...</small>
                         </div>
@@ -73,7 +69,7 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">Recordings & Content</h5>
                         <p class="card-text">Organize recorded lectures, share with students, and manage library.</p>
-                        <a href="audio-recording.html" class="btn btn-success">View Recordings</a>
+                        <a href="audio-recording.html" class="btn btn-success btn btn-primary ml-lg-3 primary-shadow">View Recordings</a>
                         <div class="mt-2">
                             <small id="recordingsCount">Loading...</small>
                         </div>
@@ -87,7 +83,7 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">Transcriptions & Notes</h5>
                         <p class="card-text">Generate accurate transcriptions and create/share structured notes.</p>
-                        <a href="transcription.html" class="btn btn-success">Manage Transcriptions</a>
+                        <a href="transcription.html" class="btn btn-success btn btn-primary ml-lg-3 primary-shadow">Manage Transcriptions</a>
                         <div class="mt-2">
                             <small id="notesCount">Loading...</small>
                         </div>
@@ -103,7 +99,7 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">Student Insights</h5>
                         <p class="card-text">Track student engagement, participation, and progress analytics.</p>
-                        <button class="btn btn-success" onclick="showStudentInsights()">View Insights</button>
+                        <button class="btn btn-success btn btn-primary ml-lg-3 primary-shadow" onclick="showStudentInsights()">View Insights</button>
                         <div class="mt-2">
                             <small id="avgEngagement">Loading...</small>
                         </div>
@@ -117,7 +113,7 @@
                     <div class="card-body text-center">
                         <h5 class="card-title">Active Broadcasts</h5>
                         <p class="card-text">View and manage your currently active live broadcasts.</p>
-                        <a href="live-broadcasting.html" class="btn btn-success">Manage Broadcasts</a>
+                        <a href="live-broadcasting.html" class="btn btn-success btn btn-primary ml-lg-3 primary-shadow">Manage Broadcasts</a>
                         <div class="mt-2">
                             <small id="activeBroadcastsCount">Loading...</small>
                         </div>

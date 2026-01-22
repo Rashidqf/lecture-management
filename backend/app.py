@@ -10,6 +10,8 @@ import os
 import uuid
 import json
 import threading
+from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
 from config import config
 from dotenv import load_dotenv
 load_dotenv()
@@ -39,7 +41,20 @@ app = Flask(__name__, static_folder='../static', template_folder='../theme')
 app.config.from_object(config.get(env, config['default']))
 
 # Initialize extensions
-db = SQLAlchemy(app)
+db = SQLAlchemy()
+
+# Development fallback: if MySQL is configured but not reachable, use SQLite so the app can boot
+if env == 'development':
+    try:
+        db_uri = app.config.get('SQLALCHEMY_DATABASE_URI')
+        if isinstance(db_uri, str) and db_uri.startswith('mysql'):
+            test_engine = create_engine(db_uri, pool_pre_ping=True)
+            with test_engine.connect():
+                pass
+    except SQLAlchemyError:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../instance/VirtualClassroom.sqlite3'
+
+db.init_app(app)
 
 # CORS Configuration - Universal CORS for ALL routes including errors
 # This ensures CORS headers are applied to EVERY response, even error responses
@@ -138,10 +153,19 @@ os.makedirs('uploads/notes', exist_ok=True)
 os.makedirs('../static/qr_codes', exist_ok=True)
 
 # Initialize OpenAI client
+openai_client = None
 if OPENAI_AVAILABLE:
-    openai_client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
-else:
-    openai_client = None
+    try:
+        openai_api_key = os.environ.get('OPENAI_API_KEY')
+        if openai_api_key:
+            openai_client = OpenAI(api_key=openai_api_key)
+        else:
+            OPENAI_AVAILABLE = False
+            print("Warning: OPENAI_API_KEY not set. Transcription and notes generation will be disabled.")
+    except Exception as e:
+        OPENAI_AVAILABLE = False
+        openai_client = None
+        print(f"Warning: OpenAI client initialization failed ({e}). Transcription and notes generation will be disabled.")
 
 # Database Models
 class User(db.Model):
