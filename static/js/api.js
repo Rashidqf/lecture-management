@@ -1,6 +1,6 @@
 // API Client for Lecture Flow
-const API_BASE_URL = 'http://localhost:5000/api';
-const WS_URL = 'http://localhost:5000';
+const API_BASE_URL = 'http://127.0.0.1:5000/api';
+const WS_URL = 'http://127.0.0.1:5000';
 
 class LectureFlowAPI {
     constructor() {

@@ -74,9 +74,9 @@ def add_cors_headers(response):
         response.headers['Access-Control-Allow-Origin'] = '*'
     
     # Add required CORS headers
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS, PATCH'
-    response.headers['Access-Control-Expose-Headers'] = 'Content-Type, Authorization'
+    response.headers['Access-Control-Allow-Headers'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = '*'
+    response.headers['Access-Control-Expose-Headers'] = '*'
     response.headers['Access-Control-Max-Age'] = '3600'
     
     return response
@@ -136,9 +136,9 @@ def handle_exception(e):
 CORS(app, 
      resources={r"/*": {"origins": "*"}},
      supports_credentials=True,  # Changed to True to support session cookies
-     allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-User-Id", "X-User-Role"],
-     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-     expose_headers=["Content-Type", "Authorization"])
+     allow_headers="*",
+     methods="*",
+     expose_headers="*")
 
 # SocketIO CORS
 socketio = SocketIO(app, 
