@@ -351,9 +351,23 @@ class LectureFlowAPI {
         return response.json();
     }
 
-    async getNotes(broadcastId) {
+    async getNotesForBroadcast(broadcastId) {
         const response = await fetch(`${API_BASE_URL}/broadcasts/${broadcastId}/notes`, {
             credentials: 'include'
+        });
+        return response.json();
+    }
+
+    async generateNotesFromText(text, title) {
+        const userId = this.getUserId();
+        const response = await fetch(`${API_BASE_URL}/notes/generate-from-text`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(userId ? { 'X-User-Id': userId, 'X-User-Role': this.getUserRole() || '' } : {})
+            },
+            credentials: 'include',
+            body: JSON.stringify({ text: text, title: title || 'Generated Notes' })
         });
         return response.json();
     }

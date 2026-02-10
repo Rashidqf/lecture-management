@@ -15,6 +15,8 @@
         .highlight { background-color: #fff3cd; }
         .note-item { padding: 10px; border: 1px solid #ddd; margin-bottom: 5px; border-radius: 5px; }
         .note-item:hover { background-color: #e9ecef; }
+        .btn-loading { pointer-events: none; opacity: 0.85; }
+        .spinner-border-sm { width: 1rem; height: 1rem; border-width: 0.15em; }
     </style>
 </head>
 <body>
@@ -28,8 +30,13 @@
             </div>
             <div class="card-body">
                 <textarea class="form-control" id="lectureInput" rows="5" placeholder="Paste transcription text here, or type your lecture content..."></textarea>
-                <p class="mt-2 text-muted">Or upload a file: <input type="file" class="form-control mt-2" id="lectureFile" accept=".txt,.docx"></p>
-                <button class="btn btn-primary mt-3" id="generateBtn" onclick="generateNotes()">Generate Notes</button>
+                <p class="mt-2 text-muted mb-1">Or upload a text file:</p>
+                <input type="file" class="form-control" id="lectureFile" accept=".txt,text/plain">
+                <p class="form-text text-muted small mt-1">Only .txt files are supported. For Word (.docx), copy and paste the text into the box above.</p>
+                <button class="btn btn-primary mt-3" id="generateBtn" onclick="generateNotes()">
+                    <span class="btn-text">Generate Notes</span>
+                    <span class="btn-loader d-none" role="status"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Generating...</span>
+                </button>
                 <div class="progress mt-3" id="notesProgress" style="display: none;">
                     <div class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
                 </div>
@@ -60,9 +67,9 @@
                 <div class="customize-options">
                     <button class="btn btn-secondary" onclick="toggleEdit()">Edit Notes</button>
                     <button class="btn btn-success ms-2" onclick="saveNotes()">Save Notes</button>
-                    <button class="btn btn-info ms-2" onclick="highlightConcepts()">Highlight Key Concepts</button>
+                    <!-- <button class="btn btn-info ms-2" onclick="highlightConcepts()">Highlight Key Concepts</button> -->
                     <button class="btn btn-warning ms-2" onclick="exportNotes()">Export as Text</button>
-                    <div class="mt-3">
+                    <!-- <div class="mt-3">
                         <label>Format:</label>
                         <select id="formatSelect" class="form-select d-inline-block w-auto ms-2" onchange="changeFormat()">
                             <option value="bullets">Bullet Points</option>
@@ -74,7 +81,7 @@
                             <option value="light">Light</option>
                             <option value="dark">Dark</option>
                         </select>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>
@@ -110,16 +117,33 @@
 
             await loadNotes();
 
-            // Handle file upload
+            // Handle file upload - only .txt to avoid binary (e.g. .docx) showing as garbage
             document.getElementById('lectureFile').addEventListener('change', function(e) {
                 const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        document.getElementById('lectureInput').value = e.target.result;
-                    };
-                    reader.readAsText(file);
+                if (!file) return;
+                const name = (file.name || '').toLowerCase();
+                if (!name.endsWith('.txt')) {
+                    alert('Please upload a .txt file only. For Word documents, copy and paste the text into the box above.');
+                    e.target.value = '';
+                    return;
                 }
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const text = ev.target.result;
+                    const looksBinary = text.length > 2 && (text.startsWith('PK') || /[\x00-\x08\x0B\x0C\x0E-\x1F]/.test(text.slice(0, 200)));
+                    if (looksBinary) {
+                        document.getElementById('lectureInput').value = '';
+                        document.getElementById('lectureFile').value = '';
+                        alert('This file is not plain text (e.g. it may be a Word document). Please use a .txt file or copy and paste the text into the box above.');
+                    } else {
+                        document.getElementById('lectureInput').value = text;
+                    }
+                };
+                reader.onerror = function() {
+                    alert('Could not read file. Please use a .txt file or paste your content.');
+                    e.target.value = '';
+                };
+                reader.readAsText(file, 'UTF-8');
             });
         };
 
@@ -181,7 +205,11 @@
             }
 
             currentNotesContent = note.content || '';
-            document.getElementById('notesContent').innerHTML = note.content || 'No content';
+            let displayContent = note.content || 'No content';
+            if (displayContent && !/<\s*(br|p|div)/i.test(displayContent)) {
+                displayContent = displayContent.replace(/\n/g, '<br>');
+            }
+            document.getElementById('notesContent').innerHTML = displayContent;
             document.getElementById('notesCard').style.display = 'block';
         }
 
@@ -193,61 +221,60 @@
                 return;
             }
 
-            // Show progress
-            document.getElementById('notesProgress').style.display = 'block';
+            const btn = document.getElementById('generateBtn');
+            const btnText = btn.querySelector('.btn-text');
+            const btnLoader = btn.querySelector('.btn-loader');
+            const progressBar = document.getElementById('notesProgress');
+
+            function setLoading(loading) {
+                if (loading) {
+                    btn.classList.add('btn-loading');
+                    btn.disabled = true;
+                    btnText.classList.add('d-none');
+                    btnLoader.classList.remove('d-none');
+                    progressBar.style.display = 'block';
+                } else {
+                    btn.classList.remove('btn-loading');
+                    btn.disabled = false;
+                    btnText.classList.remove('d-none');
+                    btnLoader.classList.add('d-none');
+                    progressBar.style.display = 'none';
+                    document.querySelector('#notesProgress .progress-bar').style.width = '0%';
+                }
+            }
+
+            setLoading(true);
             let progress = 0;
             const interval = setInterval(() => {
-                progress += 25;
-                if (progress > 90) progress = 90;
-                document.querySelector('#notesProgress .progress-bar').style.width = `${progress}%`;
-            }, 500);
+                progress += 15;
+                if (progress > 85) progress = 85;
+                document.querySelector('#notesProgress .progress-bar').style.width = progress + '%';
+            }, 400);
 
             try {
-                // Simulate AI processing (placeholder until AI is integrated)
-                await new Promise(resolve => setTimeout(resolve, 2000));
-
-                // Generate notes (placeholder - will be replaced with AI in the future)
-                const generatedNotes = simulateAINotes(inputText);
-                currentNotesContent = generatedNotes;
-                document.getElementById('notesContent').innerHTML = generatedNotes;
-                document.getElementById('notesCard').style.display = 'block';
-                document.getElementById('progressAlert').style.display = 'block';
-
+                const result = await api.generateNotesFromText(inputText, 'Generated Notes');
                 clearInterval(interval);
                 document.querySelector('#notesProgress .progress-bar').style.width = '100%';
-                setTimeout(() => {
-                    document.getElementById('notesProgress').style.display = 'none';
-                }, 500);
-            } catch (error) {
-                console.error('Error generating notes:', error);
-                alert('Error generating notes: ' + error.message);
-                clearInterval(interval);
-                document.getElementById('notesProgress').style.display = 'none';
-            }
-        }
+                setLoading(false);
 
-        // Simulate AI Notes Generation (placeholder)
-        function simulateAINotes(text) {
-            // Basic keyword extraction and structuring (simulated AI)
-            const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-            const summary = sentences.slice(0, 2).join('. ') + '.';
-            
-            let bullets = '<ul>';
-            sentences.slice(2, 5).forEach(sentence => {
-                const trimmed = sentence.trim();
-                if (trimmed.length > 0) {
-                    bullets += `<li>${trimmed}</li>`;
+                if (result.success && result.content) {
+                    const escaped = String(result.content)
+                        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                    const withBreaks = escaped.replace(/\n/g, '<br>');
+                    currentNotesContent = result.content;
+                    document.getElementById('notesContent').innerHTML = withBreaks;
+                    document.getElementById('notesCard').style.display = 'block';
+                    document.getElementById('progressAlert').style.display = 'block';
+                    await loadNotes();
+                } else {
+                    alert(result.message || 'Failed to generate notes. Please try again.');
                 }
-            });
-            bullets += '</ul>';
-
-            return `
-                <h6>Summary</h6>
-                <p>${summary}</p>
-                <h6>Key Points</h6>
-                ${bullets}
-                <p class="text-muted mt-3"><small>Note: This is a simulated AI-generated summary. Real AI note generation will be integrated in the future.</small></p>
-            `;
+            } catch (error) {
+                clearInterval(interval);
+                setLoading(false);
+                console.error('Error generating notes:', error);
+                alert('Error generating notes: ' + (error.message || 'Please try again.'));
+            }
         }
 
         // Save Notes

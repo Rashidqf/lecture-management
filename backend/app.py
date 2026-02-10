@@ -10,7 +10,7 @@ import os
 import uuid
 import json
 import threading
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, or_
 from sqlalchemy.exc import SQLAlchemyError
 from config import config
 from dotenv import load_dotenv
@@ -652,8 +652,23 @@ def get_recordings_unified():
             rec_dict['user'] = user.to_dict() if user else None
             result.append(rec_dict)
         return jsonify(result), 200
+    elif user_role == 'student':
+        # Students see: (1) their own recordings, (2) recordings from broadcasts they attended
+        attended_broadcast_ids = [a.broadcast_id for a in Attendance.query.filter_by(student_id=user_id).all()]
+        recordings = Recording.query.filter(
+            or_(
+                Recording.user_id == user_id,
+                (Recording.broadcast_id.isnot(None)) & (Recording.broadcast_id.in_(attended_broadcast_ids))
+            )
+        ).order_by(Recording.created_at.desc()).all()
+        result = []
+        for r in recordings:
+            rec_dict = r.to_dict()
+            rec_dict['is_own'] = (r.user_id == user_id)  # Frontend can hide Delete for non-own
+            result.append(rec_dict)
+        return jsonify(result), 200
     else:
-        # Teachers and students see only their own recordings
+        # Teachers see only their own recordings
         recordings = Recording.query.filter_by(user_id=user_id).order_by(Recording.created_at.desc()).all()
         return jsonify([r.to_dict() for r in recordings]), 200
 
@@ -678,8 +693,18 @@ def get_transcriptions_unified():
             trans_dict['broadcast'] = broadcast.to_dict() if broadcast else None
             result.append(trans_dict)
         return jsonify(result), 200
+    elif user_role == 'student':
+        # Students see: (1) their own transcriptions, (2) transcriptions from broadcasts they attended
+        attended_broadcast_ids = [a.broadcast_id for a in Attendance.query.filter_by(student_id=user_id).all()]
+        transcriptions = Transcription.query.filter(
+            or_(
+                Transcription.user_id == user_id,
+                (Transcription.broadcast_id.isnot(None)) & (Transcription.broadcast_id.in_(attended_broadcast_ids))
+            )
+        ).order_by(Transcription.created_at.desc()).all()
+        return jsonify([t.to_dict() for t in transcriptions]), 200
     else:
-        # Teachers and students see only their own transcriptions
+        # Teachers see only their own transcriptions
         transcriptions = Transcription.query.filter_by(user_id=user_id).order_by(Transcription.created_at.desc()).all()
         return jsonify([t.to_dict() for t in transcriptions]), 200
 
@@ -706,8 +731,18 @@ def get_notes_unified():
             note_dict['transcription'] = transcription.to_dict() if transcription else None
             result.append(note_dict)
         return jsonify(result), 200
+    elif user_role == 'student':
+        # Students see: (1) their own notes, (2) notes from broadcasts they attended
+        attended_broadcast_ids = [a.broadcast_id for a in Attendance.query.filter_by(student_id=user_id).all()]
+        notes = Note.query.filter(
+            or_(
+                Note.user_id == user_id,
+                (Note.broadcast_id.isnot(None)) & (Note.broadcast_id.in_(attended_broadcast_ids))
+            )
+        ).order_by(Note.created_at.desc()).all()
+        return jsonify([n.to_dict() for n in notes]), 200
     else:
-        # Teachers and students see only their own notes
+        # Teachers see only their own notes
         notes = Note.query.filter_by(user_id=user_id).order_by(Note.created_at.desc()).all()
         return jsonify([n.to_dict() for n in notes]), 200
 
@@ -1141,7 +1176,8 @@ def transcribe_broadcast_audio(broadcast_id):
             transcript = openai_client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
-                response_format="text"
+                response_format="text",
+                language="en"  # Force English (or Roman Urdu) output; avoids Hindi/other script
             )
         print(f"Transcription completed for broadcast {broadcast_id}, length: {len(transcript)} characters")
         
@@ -1233,22 +1269,25 @@ def generate_broadcast_notes(broadcast_id, transcription_id):
         
         # Generate notes using OpenAI
         print(f"Starting notes generation for broadcast {broadcast_id}")
-        prompt = f"""Please create comprehensive study notes from the following lecture transcription. 
-        Organize the notes with:
-        1. A brief summary at the top
-        2. Key concepts and main points
-        3. Important details and examples
-        4. Any formulas, definitions, or important facts
-        
-        Transcription:
-        {transcription.text_content}
-        
-        Format the notes in a clear, structured way that would be helpful for studying."""
-        
+        prompt = f"""Create comprehensive study notes from the following lecture transcription.
+
+IMPORTANT: Write the entire output in English only. Use only standard Latin letters (A-Z, a-z), numbers, and common punctuation. Do not use Hindi, Urdu script, or any non-Latin characters.
+
+Organize the notes with:
+1. A brief summary at the top (in English)
+2. Key concepts and main points (use bullet points with - or *)
+3. Important details and examples
+4. Any formulas, definitions, or important facts
+
+Transcription:
+{transcription.text_content}
+
+Format in clear, readable English with newlines and bullet points. Output plain text only (no HTML)."""
+
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that creates comprehensive study notes from lecture transcriptions."},
+                {"role": "system", "content": "You are a helpful assistant that creates study notes from lecture transcriptions. Always write in English only. Use plain text with newlines and bullet points. Never use Hindi, Urdu script, or special Unicode characters."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7
@@ -1651,6 +1690,68 @@ def create_transcription():
         'transcription': transcription.to_dict(),
         'message': 'Transcription saved'
     }), 201
+
+# Generate notes from text (paste or uploaded file) - always in English
+@app.route('/api/notes/generate-from-text', methods=['POST'])
+def generate_notes_from_text():
+    """Generate study notes from pasted or uploaded text using OpenAI. Output is always in English."""
+    user_id, _ = get_authenticated_user()
+    if not user_id:
+        return jsonify({'success': False, 'message': 'Not authenticated'}), 401
+    data = request.get_json() or {}
+    text = (data.get('text') or '').strip()
+    if not text:
+        return jsonify({'success': False, 'message': 'No text provided'}), 400
+    if not openai_client:
+        return jsonify({'success': False, 'message': 'Notes generation is not available'}), 503
+    try:
+        prompt = f"""Create comprehensive study notes from the following lecture or content.
+
+IMPORTANT: Write the entire output in English only. Use only standard Latin letters (A-Z, a-z), numbers, and common punctuation. Do not use Hindi, Urdu script, or any non-Latin characters.
+
+Organize the notes with:
+1. A brief summary at the top (in English)
+2. Key concepts and main points (use bullet points with - or *)
+3. Important details and examples
+4. Any formulas, definitions, or important facts
+
+Content:
+{text[:50000]}
+
+Format in clear, readable English with newlines and bullet points. Output plain text only (no HTML)."""
+
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that creates study notes. Always write in English only. Use plain text with newlines and bullet points. Never use Hindi, Urdu script, or special Unicode characters."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7
+        )
+        notes_content = response.choices[0].message.content or ""
+        summary = (notes_content.split('\n\n')[0] if '\n\n' in notes_content else notes_content[:200]).strip()
+        title = data.get('title') or "Generated Notes"
+        note = Note(
+            user_id=user_id,
+            broadcast_id=None,
+            transcription_id=None,
+            title=title,
+            content=notes_content,
+            summary=summary
+        )
+        db.session.add(note)
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'note': note.to_dict(),
+            'content': notes_content,
+            'summary': summary,
+            'message': 'Notes generated in English'
+        }), 200
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 # Notes Routes
 @app.route('/api/notes', methods=['POST'])

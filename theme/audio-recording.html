@@ -153,6 +153,10 @@
                 // Escape quotes in title for onclick attribute
                 const safeTitle = (recording.title || 'Recording').replace(/'/g, "\\'");
                 
+                const isOwn = recording.is_own !== false;
+                const deleteBtn = isOwn
+                    ? `<button class="btn btn-sm btn-danger btn-group-item" onclick="deleteRecording(${recording.id})">Delete</button>`
+                    : '';
                 return `
                     <div class="lecture-item">
                         <div class="d-flex justify-content-between align-items-center">
@@ -163,7 +167,7 @@
                             <div class="btn-group">
                                 <button class="btn btn-sm btn-primary btn-group-item" onclick="playRecording('${fileUrl}', '${safeTitle}')">Play</button>
                                 <button class="btn btn-sm btn-success btn-group-item" onclick="downloadRecording('${fileUrl}', '${safeTitle}')">Download</button>
-                                <button class="btn btn-sm btn-danger btn-group-item" onclick="deleteRecording(${recording.id})">Delete</button>
+                                ${deleteBtn}
                             </div>
                         </div>
                     </div>
